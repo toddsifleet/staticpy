@@ -13,6 +13,20 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 def upload_to_s3(site_path, aws_keys, bucket):
+    '''Upload the site to s3
+
+        Given a site_path, access credentials and an s3 buck name we upload
+        the compiled results to s3.  
+
+        We transform the individual file paths to remove .html unless they are 
+        index.html files.  This allows us to have pretty urls like /path/to/page.
+
+        We filter out .DS_Store files as well
+        params:
+            site_path: the path to our files
+            aws_keys: ('access_key', 'secret_key')
+            bucket: s3 bucket bucket_name
+    '''
     from s3_uploader import BulkUploader
     def transform(path):
         if path.endswith('index.html'):
@@ -27,12 +41,25 @@ def upload_to_s3(site_path, aws_keys, bucket):
     uploader.start(site_path)
 
 def copy_static(site_path, output_path):
+    '''Copy the contents of the static directory from our site_path to our 
+    output_path.  If /output_path/static already exists we delete it!'''
+
     static_dir = os.path.join(output_path, 'static')
     if os.path.isdir(static_dir):
         shutil.rmtree(static_dir)
     shutil.copytree(os.path.join(site_path, 'static'), static_dir)
 
 class FileUpdated(FileSystemEventHandler):
+    '''Define callbacks for watchdog
+
+        The callback are:
+            static changes: copy new/modified file into output_path/static/..
+            dynamic changes: recompile site 
+
+            All changes: If self.clients_queue has entris we loop through each
+                client to notify them of the changes, this allows the browser 
+                to refresh without user intervention.
+    '''
     def __init__(self, clients_queue, site):
         self.clients_queue = clients_queue
         self.site = site
@@ -76,6 +103,18 @@ class FileUpdated(FileSystemEventHandler):
             client.send('update')
 
 def monitor_site(site, clients = None):
+    '''Monitor site_path for changes
+
+        We start a watchdog observer to monitor the site_path.  Once we are monitoring
+        all of the files we sit and wait for user input telling us to exit.
+
+        params:
+            site: a compiler.Site object
+            clients: a Queue.Queue() containing WebSocket clients
+
+        return:
+            None
+    '''
     observer = Observer()
     for path in ['dynamic', 'static']:
         observer.schedule(
@@ -90,14 +129,6 @@ def monitor_site(site, clients = None):
     print 'shutting down'
     observer.stop()
     observer.join()
-
-
-def get_output_path(site_path):
-    output_path = os.path.join(site_path, 'output')
-    if not os.path.isdir(output_path):
-        os.mkdir(output_path)
-
-    return output_path
 
 def run(args):
     if not os.path.isdir(args.site_path):

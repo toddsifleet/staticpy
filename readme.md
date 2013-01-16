@@ -3,7 +3,7 @@ A python static site generator
 
 I wanted a simple way to generate a personal static website, this is what I got.  Some of the features:
 
--It uses the powerful [Jinja Template](http://jinja.pocoo.org/)
+-It uses the powerful [Jinja](http://jinja.pocoo.org/) templating engine
 
 -It has a built in development server, that reloads on file changes.
 
@@ -11,8 +11,6 @@ I wanted a simple way to generate a personal static website, this is what I got.
 
 -It has built in support to upload to s3.
 
-More to come, I am still working on this!
-=============
 
 What does a page's data look like
 -------
