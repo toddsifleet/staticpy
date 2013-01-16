@@ -44,10 +44,14 @@ def copy_static(site_path, output_path):
     '''Copy the contents of the static directory from our site_path to our 
     output_path.  If /output_path/static already exists we delete it!'''
 
-    static_dir = os.path.join(output_path, 'static')
-    if os.path.isdir(static_dir):
-        shutil.rmtree(static_dir)
-    shutil.copytree(os.path.join(site_path, 'static'), static_dir)
+    static_dir_in = os.path.join(site_path, 'static')
+    if not os.path.isdir(static_dir_in):
+        return
+
+    static_dir_out = os.path.join(output_path, 'static')
+    if os.path.isdir(static_dir_out):
+        shutil.rmtree(static_dir_out)
+    shutil.copytree(static_dir_in, static_dir_out)
 
 class FileUpdated(FileSystemEventHandler):
     '''Define callbacks for watchdog
@@ -116,12 +120,14 @@ def monitor_site(site, clients = None):
             None
     '''
     observer = Observer()
-    for path in ['dynamic', 'static']:
-        observer.schedule(
-            FileUpdated(clients, site), 
-            path = os.path.join(site.input_path, path), 
-            recursive = True
-        )
+    for directory in ['dynamic', 'static']:
+        path = os.path.join(site.input_path, directory)
+        if os.path.isdir(path):
+            observer.schedule(
+                FileUpdated(clients, site), 
+                path = path, 
+                recursive = True
+            )
 
     observer.start()
     input = raw_input('Running: press enter to quit...')
@@ -129,6 +135,17 @@ def monitor_site(site, clients = None):
     print 'shutting down'
     observer.stop()
     observer.join()
+
+def get_output_path(site_path):
+    if hasattr(settings, 'output_path'):
+        output_path = settings.output_path
+    else:
+        output_path = os.path.join(site_path, 'output')
+
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
+
+    return output_path
 
 def run(args):
     if not os.path.isdir(args.site_path):
@@ -140,17 +157,12 @@ def run(args):
     try:
         import settings
     except:
-        print '''You must have a settings.py file in your site directory to compile your website.  
-Parameters it can define:
-    aws_keys = (<access_key, private_key)           #optional
-    s3_bucket = <s3 bucket name>                    #optional
+        print 'No settings.py file found'
+        global settings
+        #it can just be a dummy object, we always verify it has an attribute before getting it
+        settings = object()
 
-    dev_path = <path to store dev site>             #required for dev
-    compile_path = <path to store final site>       #required for compile
-        '''
-        return
-
-    output_path = settings.output_path
+    output_path = get_output_path(site_path)
     if args.dev:
         args.monitor = True
         clients = Queue.Queue()
@@ -168,6 +180,7 @@ Parameters it can define:
     site = compiler.Site(site_path, output_path, dev_host)
     
     print 'Compiling Site: %s' % site_path
+    print 'Output: %s' % output_path
     site.compile()
     print 'Done Compiling'
 

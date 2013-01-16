@@ -1,6 +1,6 @@
 from boto.s3.connection import S3Connection
 from boto.s3.bucket import Bucket
-
+from boto.s3.key import Key
 
 import os
 import Queue
@@ -100,9 +100,15 @@ class Worker(threading.Thread):
 
     def upload(self, key, file_path):
         s3_key = self.bucket.get_key(key)
+        if s3_key:
+            old_hash = s3_key.etag.strip('"')
+        else:
+            s3_key = Key(self.bucket)
+            s3_key.key = key
+            old_hash = None
+            
         with open(file_path) as fh:
             new_hash, _ = s3_key.compute_md5(fh)
-            old_hash = s3_key.etag.strip('"')
             if new_hash == old_hash:
                 print "File %s unchanged" % key
             else:
