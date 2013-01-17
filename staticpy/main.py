@@ -3,6 +3,7 @@ import compiler
 import Queue
 import socket_server
 import os
+import errno
 import sys
 import time
 
@@ -11,6 +12,15 @@ import shutil
 #dependency (if you want to do anything that has to do with monitoring files check out watchdog)
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+def copy_file(file_path, new_file_path):
+    #make sure all of the directories leading up to the file exist
+    try:
+        os.makedirs(new_file_path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+    shutil.copy(file_path, new_file_path)
 
 def upload_to_s3(site_path, aws_keys, bucket):
     '''Upload the site to s3
@@ -82,7 +92,8 @@ class FileUpdated(FileSystemEventHandler):
             new_file_path = os.path.join(self.output_path, 'static', file_path[len(self.static_dir) + 1::])
             if os.path.isfile(file_path):
                 print 'Copying Static File: %s' % new_file_path
-                shutil.copy(file_path, new_file_path)
+                copy_file(file_path, new_file_path)
+                
             elif os.path.isfile(new_file_path):
                 print 'Deleting File: %s' % new_file_path
                 os.remove(new_file_path)
