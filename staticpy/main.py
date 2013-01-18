@@ -1,26 +1,11 @@
 import argparse
 import compiler
-import Queue
 import socket_server
+import Queue
 import os
-import errno
 import sys
-import time
+from utils import copy_static
 
-import shutil
-
-#dependency (if you want to do anything that has to do with monitoring files check out watchdog)
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-
-def copy_file(file_path, new_file_path):
-    #make sure all of the directories leading up to the file exist
-    try:
-        os.makedirs(new_file_path)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-    shutil.copy(file_path, new_file_path)
 
 def upload_to_s3(site_path, aws_keys, bucket):
     '''Upload the site to s3
@@ -50,103 +35,6 @@ def upload_to_s3(site_path, aws_keys, bucket):
     uploader = BulkUploader(aws_keys, bucket, file_filter, transform)
     uploader.start(site_path)
 
-def copy_static(site_path, output_path):
-    '''Copy the contents of the static directory from our site_path to our 
-    output_path.  If /output_path/static already exists we delete it!'''
-
-    static_dir_in = os.path.join(site_path, 'static')
-    if not os.path.isdir(static_dir_in):
-        return
-
-    static_dir_out = os.path.join(output_path, 'static')
-    if os.path.isdir(static_dir_out):
-        shutil.rmtree(static_dir_out)
-    shutil.copytree(static_dir_in, static_dir_out)
-
-class FileUpdated(FileSystemEventHandler):
-    '''Define callbacks for watchdog
-
-        The callback are:
-            static changes: copy new/modified file into output_path/static/..
-            dynamic changes: recompile site 
-
-            All changes: If self.clients_queue has entris we loop through each
-                client to notify them of the changes, this allows the browser 
-                to refresh without user intervention.
-    '''
-    def __init__(self, clients_queue, site):
-        self.clients_queue = clients_queue
-        self.site = site
-        self.site_path = site.input_path
-        self.output_path = site.output_path
-        self.static_dir = os.path.join(self.site_path, 'static')        
-        FileSystemEventHandler.__init__(self)
-
-    def dispatch(self, file_path):
-        file_path = file_path.src_path
-        if file_path == self.static_dir:
-            print "Copying the static directory"
-            copy_static(self.site_path, self.output_path)
-
-        if file_path.startswith(self.static_dir):
-            new_file_path = os.path.join(self.output_path, 'static', file_path[len(self.static_dir) + 1::])
-            if os.path.isfile(file_path):
-                print 'Copying Static File: %s' % new_file_path
-                copy_file(file_path, new_file_path)
-                
-            elif os.path.isfile(new_file_path):
-                print 'Deleting File: %s' % new_file_path
-                os.remove(new_file_path)
-        else:
-            try:
-                print 'Recompiling Site'
-                self.site.navigation_links = []
-                self.site.compile()
-                print 'Done Recompiling'
-            except Exception as e:
-                print 'Error Recompiling', e
-
-
-        if self.clients_queue:
-            self.notify()
-        
-        print 'Running: press enter to quit...'
-
-    def notify(self):
-        while not self.clients_queue.empty():
-            client = self.clients_queue.get()
-            client.send('update')
-
-def monitor_site(site, clients = None):
-    '''Monitor site_path for changes
-
-        We start a watchdog observer to monitor the site_path.  Once we are monitoring
-        all of the files we sit and wait for user input telling us to exit.
-
-        params:
-            site: a compiler.Site object
-            clients: a Queue.Queue() containing WebSocket clients
-
-        return:
-            None
-    '''
-    observer = Observer()
-    for directory in ['dynamic', 'static']:
-        path = os.path.join(site.input_path, directory)
-        if os.path.isdir(path):
-            observer.schedule(
-                FileUpdated(clients, site), 
-                path = path, 
-                recursive = True
-            )
-
-    observer.start()
-    input = raw_input('Running: press enter to quit...')
-
-    print 'shutting down'
-    observer.stop()
-    observer.join()
-
 def get_output_path(site_path):
     if hasattr(settings, 'output_path'):
         output_path = settings.output_path
@@ -159,22 +47,29 @@ def get_output_path(site_path):
     return output_path
 
 def run(args):
-    if not os.path.isdir(args.site_path):
-        raise IOError('Could not find the path specified %s' % args.path)
-
     site_path = args.site_path
+    if site_path == 'docs':
+        cwd = os.getcwd()
+        if cwd.endswith('staticpy'):
+            site_path = os.path.join(cwd, 'demo')
+
+    if not os.path.isdir(site_path):
+        raise IOError('Could not find the path specified %s' % site_path)
+
+
     sys.path.append(site_path)
 
     try:
         import settings
     except:
-        print 'No settings.py file found'
         global settings
         #it can just be a dummy object, we always verify it has an attribute before getting it
         settings = object()
 
     output_path = get_output_path(site_path)
     if args.dev:
+        #not sure if we want this it is possible that people want to use a different server
+        args.serve = True
         args.monitor = True
         clients = Queue.Queue()
         server = socket_server.WebSocketServer(clients)
@@ -209,9 +104,18 @@ it should take the form:
         import web_server
         web_server.Server(output_path).start()
 
-    if args.monitor:
-        monitor_site(site, clients)
 
+    if args.monitor:
+        import file_monitor
+        observer = file_monitor.monitor_site(site, clients)
+
+    if args.monitor or args.serve:
+        input = raw_input('Running: press enter to quit...')
+
+        print 'Shutting Down'
+        if args.monitor:
+            observer.stop()
+            observer.join()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

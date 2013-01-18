@@ -61,4 +61,5 @@ class Server(threading.Thread):
         '''
         os.chdir(self.site_path)
         self.server = TestServer(('', self.port), TestHandler)
+        print "Serving webpage at: %s:%d" % (self.host, self.port)
         self.server.serve_forever()
