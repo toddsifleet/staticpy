@@ -8,12 +8,27 @@ from struct import pack
 #it really speeds up the iteration cycles.  It is inject to a template.
 client_js_code = '''
     <script type="text/javascript"> 
-        window.onload = function() {
-            var s = new WebSocket("ws://%s:%s/");
-            s.onopen = function(e) { document.title = 'MONITORING'; };
-            s.onclose = function(e) { document.title = 'NO MONITORING';  };
-            s.onmessage = function(e) {document.location.reload(true); };
-        };
+        var server;
+        var try_count = 10;
+        function connect() {
+            if (try_count-- <= 0) {
+                document.title = 'Error Connecting'; 
+                return;
+            }
+
+            server = new WebSocket("ws://%s:%s/");
+            server.onopen = function(e) { 
+                document.title = 'MONITORING'; 
+                server.onclose = function(e) { 
+                    document.title = 'Connection Lost';  
+                }; 
+            };
+            server.onclose = function(e) { connect() };
+            server.onmessage = function(e) {document.location.reload(true); };
+        }
+
+        //this should modified to make it work in i.e.
+        window.addEventListener("load", connect, false);
     </script>
 '''
 def frame_message(message):
