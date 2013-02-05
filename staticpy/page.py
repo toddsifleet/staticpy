@@ -44,8 +44,6 @@ class Page(object):
         If you try to read an attribute that does not exist the Page object returns an empty string.
     '''
 
-    #default here so we don't call int on an empty string
-    order = '100'
     def __init__(self, file_path, url_path):
         '''Model a .page file as an object
 
@@ -59,6 +57,10 @@ class Page(object):
                     e.g. projects
 
         '''
+        #we store all of our attributes here
+        self.data = {
+            'order': '100' #default here so we don't call int on an empty string
+        }
         self.slug = get_slug(file_path)
         self.url = build_url(url_path, self.slug)
         self.path = url_path or 'home'
@@ -96,12 +98,10 @@ class Page(object):
         #clean up the attribute name/value before we store it
         name = name.strip().replace('-', '_')
         value = value.strip()
-        setattr(self, name, value)
+        self.data[name] =  value
 
     def __getattr__(self, name):
         #don't die if we don't have a specified attribute
-        try:
-            return getattr(self, name)
-
-        except:
-            return ''
+        if name in self.data:
+            return self.data[name]
+        return ''

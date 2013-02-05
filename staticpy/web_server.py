@@ -36,7 +36,7 @@ class TestServer(SocketServer.TCPServer):
 
 
 class Server(threading.Thread):
-    def __init__(self, site_path, host = None, port = 8080):
+    def __init__(self, site_path, host = None, port = 8880):
         '''A single threaded SimpleHTTPServer
 
             This creates a daemon thread that sits and listens for web requests
@@ -45,7 +45,10 @@ class Server(threading.Thread):
             By default we listen at localhost:8080
         '''
         if host is None:
-            self.host = socket.gethostbyname(socket.gethostname())
+            try:
+                self.host = socket.gethostbyname(socket.gethostname())
+            except:
+                self.host = '127.0.0.1'
         else:
             self.host = host
         self.port = port

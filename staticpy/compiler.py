@@ -33,19 +33,15 @@ class Site(object):
                     aws_keys = ('access_key', 'private_key')
                     s3_bucket = 'bucket_name'
     '''
-    def __init__(self, input_path, output_path, dev_server = None):
+    def __init__(self, input_path, output_path, client_js_code = None):
         '''Initialize a website
 
             params:
                 input_path: the full directory to the websites files (.page, templates)
                 output_path: where you want the resulting files to go
-                dev_server: a dictionary representing your dev server that is monitor changes:
-                    {
-                        host: 'localhost'
-                        port: port
-                    }
+                self.client_js_code: A piece of JS to communicate with the websocket server
         '''
-        self.dev_server = dev_server
+        self.client_js_code = client_js_code
         self.input_path = input_path
         self.output_path = output_path
         self.navigation_links = []
@@ -149,7 +145,7 @@ class Site(object):
         with open(file_path, 'w') as out:
             page = template.render(
                 page = page,
-                dev_server = self.dev_server,
+                client_js_code = self.client_js_code,
                 navigation_links = self.navigation_links,
                 **data
             )

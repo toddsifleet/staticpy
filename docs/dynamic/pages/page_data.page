@@ -1,0 +1,44 @@
+:html-title: Creating .page files
+:heading: Storing data in .page files
+:title: Page Data
+:home-page: 1
+:order: 2
+:content:
+	<h1>Storing Page Data</h1>
+	<div class = "row-fluid">
+		<div class="span8 offset2">
+			<div class = "well">
+				<p>
+					All page data is store in .page files, which are very simple data containers.  There are no real "rules" associated with them, they represent a set of key -> value attributes.  Each .page file is compiled and passed into a Jinja template.
+				</p>
+				
+			</div>
+			<h3>An example .page file:</h3>
+			<pre>
+ :html-title: Html title
+ :heading: Page Heading
+ :title: Nav Title
+ :home_page: Display on the home page?
+ :template: Non Default Template
+ :order: Order in nav bar
+ :meta-description:
+ :meta-keywords:
+ :styles:
+	Style specific to this page
+ :scripts:
+	Scripts specific to this page
+ :content:
+	The main content
+		</pre>
+			<div class = "alert alert-danger" style = "text-align: center; font-weight: bold">
+				These are the values that I have chosen to include, none of them are required! 
+			</div>
+
+		<h3>Rules and Special Attributes:</h3>
+			<ul>
+				<li>If a line begins with <b>:anystring:</b> it will be considered the name of an attribute</li>
+				<li><b>:homepage:</b> determines if this page will appear in the navigation bar (name to be changed)</li>
+				<li><b>:order:</b> Defines the order that this page will be appear in the navigation list.</li>
+			</ul>
+		</div>
+	</div>

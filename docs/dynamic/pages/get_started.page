@@ -1,0 +1,87 @@
+:html-title: Getting started with Static Py
+:heading: Getting Started
+:title: Get Started
+:home-page: 1
+:order: 1
+:content:
+	<a href = "https://github.com/toddsifleet/staticpy/archive/master.zip" class = "btn btn-primary btn-large pull-right">Download Now</a>
+	<h1>Getting Started with Static Py</h1>
+	<div class = "row-fluid">
+		<div class="span4">
+			<p>
+				<strong style = "margin-right: 5px;">&raquo;</strong>To get started download and unzip <a href = "https://github.com/toddsifleet/staticpy/archive/master.zip">Static Py</a>, and install <a href = "http://jinja.pocoo.org/docs/intro/#installation">Jinja</a>, these are the only two requirements to get up and running.  Once Jinja is installed you are set to get up and running. On the command line run:
+			</p>
+
+			<p>
+				<strong style = "margin-right: 5px;">&raquo;</strong>You are now serving a copy of this documentation from your dev server.  Load it up in your browser!  If you navigate into /path/to/staticpy/demo you can see the basic layout of a staticpy webpage.
+			</p>
+			
+
+		</div>
+		<div class = "span8">
+			<pre class="prettyprint linenums">
+>> cd /path/to/staticpy
+>> python staticpy/main.py -serve docs
+  >Listening at 10.33.11.160:8888
+  >Compiling Site: /Users/toddsifleet/Dropbox/github/staticpy/demo
+  >Output: /Users/toddsifleet/Dropbox/github/staticpy/demo/output
+  >Done Compiling
+  >Serving webpage at 10.33.11.160:8080
+  >Running: press enter to quit...
+		</pre>
+	</div>
+	<h1>Enable Active Monitoring</h1>
+	<div class = "row-fluid">
+		<div class="span4">
+			<p>
+				<strong style = "margin-right: 5px;">&raquo;</strong>To enable the compiler to monitor your files and recompile anytime something changes you need to install <a href="http://packages.python.org/watchdog/installation.html">Watchdog</a>.  Watchdog is a very powerful filesystem monitor that monitors directories/files for changes.
+			</p>
+
+			<p>
+				<strong style = "margin-right: 5px;">&raquo;</strong>Now any change you make with in the docs directory will cause the site to re compile and serve the new version of you site
+			</p>
+			
+
+		</div>
+		<div class = "span8">
+			<pre class="prettyprint linenums">
+>> cd /path/to/staticpy
+>> python staticpy/main.py -serve -monitor docs
+  >Listening at 10.33.11.160:8888
+  >Compiling Site: /Users/toddsifleet/Dropbox/github/staticpy/demo
+  >Output: /Users/toddsifleet/Dropbox/github/staticpy/demo/output
+  >Done Compiling
+  >Serving webpage at 10.33.11.160:8080
+  >Running: press enter to quit...
+			</pre>
+	</div>
+	<h1>Developer Mode</h1>
+	<div class = "row-fluid">
+		<div class="span4">
+			<p>
+				<strong style = "margin-right: 5px;">&raquo;</strong> The -dev flag not only combines, -serve and -monitor functionality, it injects a piece of javascript that connects to the dev server and refreshes the page anytime something changes. 
+			</p>
+			<p>
+				<strong style = "margin-right: 5px;">&raquo;</strong> It only requires placing <b>{{ client_js_code }}</b> just below your head tag.  This snippet is removed when you do your final compilation, so it is never visible outside of your dev server.
+			</p>
+
+			<p>
+				<strong style = "margin-right: 5px;">&raquo;</strong>This is how I develop, I have a view of the site next to my text editor and every time I save I can immediately see the effects of my changes.  This type of development greatly reduces the length of the feedback loop.
+			</p>
+			
+
+		</div>
+		<div class = "span8">
+			<pre class="prettyprint linenums">
+>> cd /path/to/staticpy
+>> python staticpy/main.py -dev docs
+  >Listening at 10.33.11.160:8888
+  >Compiling Site: /Users/toddsifleet/Dropbox/github/staticpy/demo
+  >Output: /Users/toddsifleet/Dropbox/github/staticpy/demo/output
+  >Done Compiling
+  >Serving webpage at 10.33.11.160:8080
+  >Running: press enter to quit...
+			</pre>
+		</div>
+	<a href = "/page-data" class = "btn btn-primary btn-large pull-right">How are pages stored?</a>
+	</div>

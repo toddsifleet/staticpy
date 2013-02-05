@@ -4,6 +4,18 @@ import hashlib
 import base64
 from struct import pack
 
+#this is used to automatically refresh the page when we are developing
+#it really speeds up the iteration cycles.  It is inject to a template.
+client_js_code = '''
+    <script type="text/javascript"> 
+        window.onload = function() {
+            var s = new WebSocket("ws://%s:%s/");
+            s.onopen = function(e) { document.title = 'MONITORING'; };
+            s.onclose = function(e) { document.title = 'NO MONITORING';  };
+            s.onmessage = function(e) {document.location.reload(true); };
+        };
+    </script>
+'''
 def frame_message(message):
     '''Frame a message for transmission
 
@@ -168,6 +180,8 @@ class WebSocketServer(threading.Thread):
         self.host = host
         self.port = port
         self.sock = self.bind()
+        #this is the client code
+        self.client_js_code = client_js_code % (self.host, '1234')
 
     def run(self):
         '''Run server

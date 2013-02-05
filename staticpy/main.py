@@ -51,7 +51,7 @@ def run(args):
     if site_path == 'docs':
         cwd = os.getcwd()
         if cwd.endswith('staticpy'):
-            site_path = os.path.join(cwd, 'demo')
+            site_path = os.path.join(cwd, 'docs')
 
     if not os.path.isdir(site_path):
         raise IOError('Could not find the path specified %s' % site_path)
@@ -73,17 +73,14 @@ def run(args):
         args.monitor = True
         clients = Queue.Queue()
         server = socket_server.WebSocketServer(clients)
-        dev_host = {
-            'host': server.host,
-            'port': server.port
-        }
+        client_js_code = server.client_js_code
         server.start()
     else:
-        dev_host = None
+        client_js_code = ''
         clients = None
 
     copy_static(site_path, output_path)
-    site = compiler.Site(site_path, output_path, dev_host)
+    site = compiler.Site(site_path, output_path, client_js_code)
     
     print 'Compiling Site: %s' % site_path
     print 'Output: %s' % output_path

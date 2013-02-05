@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{ client_js_code }}
+    <style>
+        {% block styles %}
+            {{ page.styles | safe }}
+        {% endblock %}
+    </style>
+
+    <script type="text/javascript">    
+        {% block scripts %}
+            {{ page.scripts | safe}}
+        {% endblock %}
+    </script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ page.html_title }}</title>
+<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="/static/main.css">
+</head>
+
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <a type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </a>
+                <a href = "/" class="brand">Static Py</a>
+                
+                <div class="nav-collapse collapse">
+                    <ul class="nav">
+                        {% for link in navigation_links %}
+                            <li class = "{% if link.url == page.url %}active{% endif %}"><a href="/{{ link.url }}">{{ link.title | title }}</a></li>
+                        {% endfor %}
+                     <li class = ""><a href = "//github.com/toddsifleet/staticpy">Github</a>
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid" style = "padding-top: 50px; margin-bottom: 50px;">
+        {{ page.content }}
+    </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+    {% block imports %}{{ page.imports}}{% endblock %}
+</body>
+</html>
