@@ -80,7 +80,7 @@ def run(args):
         clients = None
 
     copy_static(site_path, output_path)
-    site = compiler.Site(site_path, output_path, client_js_code)
+    site = compiler.Site(site_path, output_path, client_js_code, not args.upload)
     
     print 'Compiling Site: %s' % site_path
     print 'Output: %s' % output_path

@@ -33,7 +33,7 @@ class Site(object):
                     aws_keys = ('access_key', 'private_key')
                     s3_bucket = 'bucket_name'
     '''
-    def __init__(self, input_path, output_path, client_js_code = None):
+    def __init__(self, input_path, output_path, client_js_code = None, include_drafts = False):
         '''Initialize a website
 
             params:
@@ -45,6 +45,7 @@ class Site(object):
         self.input_path = input_path
         self.output_path = output_path
         self.navigation_links = []
+        self.include_drafts = include_drafts
 
     def get_pages(self):
         '''Get all page data
@@ -84,6 +85,8 @@ class Site(object):
             for file_name in [x for x in file_names if x.endswith('.page')]:
                 file_path = os.path.join(pages_dir, dir_path, file_name)
                 page = Page(file_path, dir_path)
+                if page.draft and not self.include_drafts:
+                    continue
                 if page.home_page:
                     self.add_to_navigation(page)
                 if file_name == 'index.page':
