@@ -4,7 +4,12 @@ from watchdog.events import FileSystemEventHandler
 import os
 import sys
 from utils import copy_static, copy_file
+import re
 
+ignore_patterns = [
+    r'\.swp$',
+]
+ignore_patterns = [re.compile(x) for x in ignore_patterns]
 
 
 class FileUpdated(FileSystemEventHandler):
@@ -27,6 +32,9 @@ class FileUpdated(FileSystemEventHandler):
         FileSystemEventHandler.__init__(self)
 
     def dispatch(self, file_path):
+        for i in ignore_patterns:
+            if i.search(file_path.src_path):
+                return
         file_path = file_path.src_path
         if file_path == self.static_dir:
             print "Copying the static directory"
