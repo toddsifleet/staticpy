@@ -173,7 +173,7 @@ class WebSocketServer(threading.Thread):
         we create a WebSocket object and accept the connection.  The newly created
         WebSocket is placed on the queue expecting the parent process to handle it.
     '''
-    def __init__(self, queue, host = None, port = 8888):
+    def __init__(self, queue, host = 'localhost', port = 8888):
         '''WebSocketServer initializer
 
             params:
@@ -187,16 +187,13 @@ class WebSocketServer(threading.Thread):
         '''
         self.queue = queue
 
-        if host is None:
-            host = socket.gethostbyname(socket.gethostname())
-
         threading.Thread.__init__(self)
         self.daemon = True
         self.host = host
         self.port = port
         self.sock = self.bind()
         #this is the client code
-        self.client_js_code = client_js_code % (self.host, '1234')
+        self.client_js_code = client_js_code % (self.host, self.port)
 
     def run(self):
         '''Run server
