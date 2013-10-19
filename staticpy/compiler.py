@@ -85,7 +85,7 @@ class Site(object):
             for file_name in [x for x in file_names if x.endswith('.page')]:
                 file_path = os.path.join(pages_dir, dir_path, file_name)
                 page = Page(file_path, dir_path)
-                if page.draft and not self.include_drafts:
+                if (page.draft or not page.published) and not self.include_drafts:
                     continue
                 if page.home_page:
                     self.add_to_navigation(page)
