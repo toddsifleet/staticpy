@@ -52,8 +52,7 @@ class FileUpdated(FileSystemEventHandler):
         else:
             try:
                 print 'Recompiling Site'
-                self.site.navigation_links = []
-                self.site.compile()
+                self.site.recompile()
                 print 'Done Recompiling'
             except Exception as e:
                 print 'Error Recompiling', e

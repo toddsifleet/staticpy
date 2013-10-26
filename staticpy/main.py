@@ -36,15 +36,12 @@ def upload_to_s3(site_path, aws_keys, bucket):
     uploader.start(site_path)
 
 def get_output_path(site_path):
-    if hasattr(settings, 'output_path'):
-        output_path = settings.output_path
-    else:
-        output_path = os.path.join(site_path, 'output')
+    if not hasattr(settings, 'output_path'):
+        settings.output_path = os.path.join(site_path, 'output')
 
-    if not os.path.isdir(output_path):
+    if not os.path.isdir(settings.output_path):
         os.mkdir(output_path)
-
-    return output_path
+    return settings.output_path
 
 def run(args):
     site_path = args.site_path
@@ -80,7 +77,7 @@ def run(args):
         clients = None
 
     copy_static(site_path, output_path)
-    site = compiler.Site(site_path, output_path, client_js_code, args.dev)
+    site = compiler.Site(site_path, settings, client_js_code, args.dev)
     
     print 'Compiling Site: %s' % site_path
     print 'Output: %s' % output_path
