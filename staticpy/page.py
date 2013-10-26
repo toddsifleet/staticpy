@@ -1,5 +1,10 @@
 import re
 import os
+import datetime
+
+def get_modified_time_stamp(file_path):
+    seconds = os.path.getmtime(file_path) 
+    return datetime.datetime.fromtimestamp(seconds).isoformat()
 
 def get_slug(file_path):
     #get the file name without the extension
@@ -65,6 +70,7 @@ class Page(object):
         self.url = build_url(url_path, self.slug)
         self.path = url_path or 'home'
         self.parse(file_path)
+        self.last_modified = get_modified_time_stamp(file_path)
 
     def parse(self, file_path):
         '''Parse a .page file_path
