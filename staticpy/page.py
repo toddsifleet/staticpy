@@ -4,7 +4,7 @@ import datetime
 
 def get_modified_time_stamp(file_path):
     seconds = os.path.getmtime(file_path) 
-    return datetime.datetime.fromtimestamp(seconds).isoformat()
+    return datetime.datetime.fromtimestamp(seconds)
 
 def get_slug(file_path):
     #get the file name without the extension
