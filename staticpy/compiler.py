@@ -33,19 +33,24 @@ class Site(object):
                     aws_keys = ('access_key', 'private_key')
                     s3_bucket = 'bucket_name'
     '''
-    def __init__(self, input_path, output_path, client_js_code = None, include_drafts = False):
+    def __init__(self, input_path, settings, client_js_code = None, include_drafts = False):
         '''Initialize a website
 
             params:
                 input_path: the full directory to the websites files (.page, templates)
-                output_path: where you want the resulting files to go
+                settings: an object defining  
+                    - output_path: where you want the resulting files to go
+                    - base_url: the url where your website is hosted
                 self.client_js_code: A piece of JS to communicate with the websocket server
         '''
         self.client_js_code = client_js_code
         self.input_path = input_path
-        self.output_path = output_path
+        self.output_path = settings.output_path
+        self.base_url = settings.base_url
         self.navigation_links = []
         self.include_drafts = include_drafts
+        self.env = Environment(loader = PackageLoader('dynamic', 'templates'))
+        self.sitemap_links = []
 
     def get_pages(self):
         '''Get all page data
@@ -87,6 +92,12 @@ class Site(object):
                 page = Page(file_path, dir_path)
                 if (page.draft or not page.published) and not self.include_drafts:
                     continue
+                if not page.no_sitemap:
+                    self.sitemap_links.append({
+                        'url': page.url,
+                        'last_modified': page.last_modified,
+                        'change_frequency': page.change_frequency
+                    })
                 if page.home_page:
                     self.add_to_navigation(page)
                 if file_name == 'index.page':
@@ -101,6 +112,11 @@ class Site(object):
             'url': page.url,
             'order': page.order or 1000
         })
+    
+    def recompile(self):
+        self.navigation_links = []
+        self.sitemap_links = []
+        self.compile()
 
     def compile(self):
         '''Compile entire site_path
@@ -117,6 +133,7 @@ class Site(object):
         self.get_pages()
         self.navigation_links.sort(key = lambda x: int(x['order']))
         self.render_pages(self.output_path, self.page_tree)
+        self.render_sitemap()
 
     def init_category(self, category_path):
         #creates a category directory if it doesn't exist
@@ -171,20 +188,32 @@ class Site(object):
                 none
 
         '''
-        env = Environment(loader = PackageLoader('dynamic', 'templates'))
-        base_template = env.get_template('base.html')
-        parent_template = env.get_template('parent_base.html')
+        base_template = self.env.get_template('base.html')
+        parent_template = self.env.get_template('parent_base.html')
         page = category['index']
-        template =  env.get_template(page.template) if page.template else parent_template
+        template =  self.env.get_template(page.template) if page.template else parent_template
         self.write_file([base_path, 'index'], template, page, {
             'children': sorted(category['pages'], key = lambda x: int(x.order))
         })
 
         for page in category['pages']:
-            template =  env.get_template(page.template) if page.template else base_template
+            template =  self.env.get_template(page.template) if page.template else base_template
             self.write_file([base_path, page.slug], template, page)
 
         for slug, category in category['sub-categories'].items():
             path = os.path.join(base_path, slug)
             self.init_category(path)
             self.render_pages(path, category)
+
+    def render_sitemap(self):
+        template = self.env.get_template('sitemap.html')
+        file_path = os.path.join(self.output_path, 'static', 'sitemap.xml')
+        site_map = template.render(
+            pages = self.sitemap_links,
+            base_url = self.base_url
+        )
+
+        with open(file_path, 'w') as output:
+            output.write(site_map)
+        
+        
