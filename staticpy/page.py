@@ -3,7 +3,7 @@ import os
 import datetime
 
 def get_modified_time_stamp(file_path):
-    seconds = os.path.getmtime(file_path) 
+    seconds = os.path.getmtime(file_path)
     return datetime.datetime.fromtimestamp(seconds)
 
 def get_slug(file_path):
@@ -23,7 +23,7 @@ def build_url(path, slug):
     if not path:
         #index means we can ignore the slug
         return '' if slug == 'index' else slug
-    
+
     #we need to split and rejoin the url to account for different
     #file separators on windows
     path_pieces = os.path.split(path.strip('\\/'))
@@ -31,19 +31,19 @@ def build_url(path, slug):
     return url if slug == 'index' else '%s/%s' % (url, slug)
 
 class Page(object):
-    '''Parses and stores a .page file 
+    '''Parses and stores a .page file
 
         A .page file is a way to represent all of the data associate with a
         webpage, e.g. title, styles, content, etc.
 
         The format is:
             :<attribute-name>: <attribute-value>
-            :<attribute-name>: 
+            :<attribute-name>:
                 <multiline attribute-
                 value>
             :<attribute-name>: <attribute-value>
 
-        Each attribute in the specified file is stored as an attribute of the object, everything is 
+        Each attribute in the specified file is stored as an attribute of the object, everything is
         stored as a string.  These are designed to be passed into a templating engine.
 
         If you try to read an attribute that does not exist the Page object returns an empty string.
@@ -76,7 +76,7 @@ class Page(object):
         '''Parse a .page file_path
 
             Read a .page file and convert each of the attributes it defines
-            into attributes of this object.  Values can be more than one line 
+            into attributes of this object.  Values can be more than one line
             the only rule is you can't start a line with :string: as this is what
             indicates a new attribute name
 
@@ -88,7 +88,7 @@ class Page(object):
         attribute, value = '', ''
         name_regex = re.compile('^:(?P<attribute>[a-z\-_]+):\s*(?P<value>.*)$')
         for line in lines:
-            data = name_regex.match(line) 
+            data = name_regex.match(line)
             if data:
                 if value:
                     value = value.strip()

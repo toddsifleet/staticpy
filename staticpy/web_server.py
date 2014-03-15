@@ -19,7 +19,7 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.path = 'index.html'
         elif os.path.isfile('%s.html' % self.path.strip('\\/') ):
             self.path = '%s.html' % self.path
-        
+
         return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
     def log_message(*args):

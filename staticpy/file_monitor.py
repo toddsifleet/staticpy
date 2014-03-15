@@ -17,10 +17,10 @@ class FileUpdated(FileSystemEventHandler):
 
         The callback are:
             static changes: copy new/modified file into output_path/static/..
-            dynamic changes: recompile site 
+            dynamic changes: recompile site
 
             All changes: If self.clients_queue has entris we loop through each
-                client to notify them of the changes, this allows the browser 
+                client to notify them of the changes, this allows the browser
                 to refresh without user intervention.
     '''
     def __init__(self, clients_queue, site):
@@ -28,7 +28,7 @@ class FileUpdated(FileSystemEventHandler):
         self.site = site
         self.site_path = site.input_path
         self.output_path = site.output_path
-        self.static_dir = os.path.join(self.site_path, 'static')        
+        self.static_dir = os.path.join(self.site_path, 'static')
         FileSystemEventHandler.__init__(self)
 
     def dispatch(self, file_path):
@@ -45,7 +45,7 @@ class FileUpdated(FileSystemEventHandler):
             if os.path.isfile(file_path):
                 print 'Copying Static File: %s' % new_file_path
                 copy_file(file_path, new_file_path)
-                
+
             elif os.path.isfile(new_file_path):
                 print 'Deleting File: %s' % new_file_path
                 os.remove(new_file_path)
@@ -60,7 +60,7 @@ class FileUpdated(FileSystemEventHandler):
 
         if self.clients_queue:
             self.notify()
-        
+
         print 'Running: press enter to quit...'
 
     def notify(self):
@@ -89,8 +89,8 @@ def monitor_site(site, clients = None):
         path = os.path.join(site.input_path, directory)
         if os.path.isdir(path):
             observer.schedule(
-                FileUpdated(clients, site), 
-                path = path, 
+                FileUpdated(clients, site),
+                path = path,
                 recursive = True
             )
 

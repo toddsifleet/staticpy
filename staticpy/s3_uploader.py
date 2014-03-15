@@ -9,7 +9,7 @@ import threading
 class BulkUploader:
     '''Multi-Threaded s3 directory BulkUploader
 
-        Walks a directory uploading everyfile to s3, you can apply filters/transforms to file paths. 
+        Walks a directory uploading everyfile to s3, you can apply filters/transforms to file paths.
         On start we spawn up to max_threads threads that each upload independently.
 
         Before uploading a file we verify that the local version is different than the version already
@@ -21,7 +21,7 @@ class BulkUploader:
             file_filter: a function that accepts a file path and returns true if you want it uploaded
             key_transform: a function that accepts a file path and returns the appropriate s3 key_transform
             max_threads: the max number of threads you want to spawn
-    ''' 
+    '''
 
     def __init__(self, aws_keys, bucket, file_filter = None, key_transform = None, max_threads = 10):
         self.max_threads = max_threads
@@ -54,10 +54,10 @@ class BulkUploader:
     def transform(self, path):
         '''Standard transform from path to key_transform
 
-            Calls your custom transform if it exists, strips off the base directory path from 
+            Calls your custom transform if it exists, strips off the base directory path from
             the file path and replaces \ with / so they are valid urls.
 
-            params: 
+            params:
                 path: path to file
             returns:
                 key: the s3 key
@@ -75,7 +75,7 @@ class Worker(threading.Thread):
 
         Won't upload a specified file if the local MD5 hash is the same as the MD5
         of the file already on s3.
-        
+
         params:
             aws_keys: ('access_key', 'secret_key')
             bucket: amazon s3 bucket name
@@ -94,7 +94,7 @@ class Worker(threading.Thread):
             connection = S3Connection(*self.aws_keys),
             name = self.bucket
         )
-        
+
         for key, file_path in IterQueue(self.queue):
             self.upload(key, file_path)
 
@@ -106,7 +106,7 @@ class Worker(threading.Thread):
             s3_key = Key(self.bucket)
             s3_key.key = key
             old_hash = None
-            
+
         with open(file_path) as fh:
             new_hash, _ = s3_key.compute_md5(fh)
             if new_hash == old_hash:

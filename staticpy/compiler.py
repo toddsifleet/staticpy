@@ -15,9 +15,9 @@ class Site(object):
 
         A website directory should be in the form
             parent_dir:
-                dynamic: 
+                dynamic:
                     templates: jinja2 templates
-                    pages: 
+                    pages:
                         index.page
                         ...
                         sub_category:
@@ -38,7 +38,7 @@ class Site(object):
 
             params:
                 input_path: the full directory to the websites files (.page, templates)
-                settings: an object defining  
+                settings: an object defining
                     - output_path: where you want the resulting files to go
                     - base_url: the url where your website is hosted
                 self.client_js_code: A piece of JS to communicate with the websocket server
@@ -112,7 +112,7 @@ class Site(object):
             'url': page.url,
             'order': page.order or 1000
         })
-    
+
     def recompile(self):
         self.navigation_links = []
         self.sitemap_links = []
@@ -160,7 +160,7 @@ class Site(object):
             data = {}
         file_path = os.path.join(self.output_path, *file_path)
         file_path = '%s.html' % file_path
-        
+
         page.file_path = file_path
         with open(file_path, 'w') as out:
             page = template.render(
@@ -180,7 +180,7 @@ class Site(object):
             This function calls it self recursively to make it through the entire page_tree
             each sub-categories entry is identical in form to self.page_tree so each sub-category
             can have as many of its own sub-categories as it chooses.
-            
+
             params:
                 base_path: the path the category we are working with
                 category: a dictionary in the form of self.page_tree
@@ -215,5 +215,5 @@ class Site(object):
 
         with open(file_path, 'w') as output:
             output.write(site_map)
-        
-        
+
+

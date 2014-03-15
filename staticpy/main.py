@@ -11,9 +11,9 @@ def upload_to_s3(site_path, aws_keys, bucket):
     '''Upload the site to s3
 
         Given a site_path, access credentials and an s3 buck name we upload
-        the compiled results to s3.  
+        the compiled results to s3.
 
-        We transform the individual file paths to remove .html unless they are 
+        We transform the individual file paths to remove .html unless they are
         index.html files.  This allows us to have pretty urls like /path/to/page.
 
         We filter out .DS_Store files as well
@@ -78,7 +78,7 @@ def run(args):
 
     copy_static(site_path, output_path)
     site = compiler.Site(site_path, settings, client_js_code, args.dev)
-    
+
     print 'Compiling Site: %s' % site_path
     print 'Output: %s' % output_path
     site.compile()
@@ -119,22 +119,22 @@ if __name__ == '__main__':
     )
 
     parser.add_argument(
-        '-monitor', 
+        '-monitor',
         dest = 'monitor',
         action = 'store_true',
         help = 'Monitor your pages file and automatically update when a file is saved'
     )
 
     parser.add_argument(
-        '-dev', 
+        '-dev',
         dest = 'dev',
         action ='store_true',
-        help = '''Enable all active development features, including monitor.  Anything hidden behind and {% if dev %} 
+        help = '''Enable all active development features, including monitor.  Anything hidden behind and {% if dev %}
             in your templates will be displayed.  Start server to notify browsers of changes'''
     )
 
     parser.add_argument(
-        '-s3', 
+        '-s3',
         dest = 'upload',
         action = 'store_true',
         help = "Upload to the s3 bucket defined in your site's settings.py file"
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     )
 
     parser.add_argument(
-        'site_path', 
+        'site_path',
         help = "The path to the to your website's data",
     )
 
