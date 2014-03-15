@@ -3,7 +3,6 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import os
 import sys
-from utils import copy_static, copy_file
 import re
 
 ignore_patterns = [
@@ -36,27 +35,13 @@ class FileUpdated(FileSystemEventHandler):
             if i.search(file_path.src_path):
                 return
         file_path = file_path.src_path
-        if file_path == self.static_dir:
-            print "Copying the static directory"
-            copy_static(self.site_path, self.output_path)
-
-        if file_path.startswith(self.static_dir):
-            new_file_path = os.path.join(self.output_path, 'static', file_path[len(self.static_dir) + 1::])
-            if os.path.isfile(file_path):
-                print 'Copying Static File: %s' % new_file_path
-                copy_file(file_path, new_file_path)
-
-            elif os.path.isfile(new_file_path):
-                print 'Deleting File: %s' % new_file_path
-                os.remove(new_file_path)
-        else:
+        if not file_path.startswith(self.static_dir):
             try:
                 print 'Recompiling Site'
                 self.site.recompile()
                 print 'Done Recompiling'
             except Exception as e:
                 print 'Error Recompiling', e
-
 
         if self.clients_queue:
             self.notify()

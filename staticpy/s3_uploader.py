@@ -34,7 +34,7 @@ class BulkUploader:
         #gets things started
         self.path = path
         queue = Queue.Queue()
-        for (dir_path, dir_name, file_names) in os.walk(path):
+        for (dir_path, dir_name, file_names) in os.walk(path, followlinks = True):
             for file_name in file_names:
                 file_path = os.path.join(dir_path, file_name)
                 if not self.file_filter or self.file_filter(file_path):

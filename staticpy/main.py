@@ -4,7 +4,7 @@ import socket_server
 import Queue
 import os
 import sys
-from utils import copy_static
+from utils import link_static
 
 
 def upload_to_s3(site_path, aws_keys, bucket):
@@ -37,33 +37,28 @@ def upload_to_s3(site_path, aws_keys, bucket):
 
 def get_output_path(site_path):
     if not hasattr(settings, 'output_path'):
-        settings.output_path = os.path.join(site_path, 'output')
+        settings.output_path = os.path.join(site_path, '.output')
 
     if not os.path.isdir(settings.output_path):
-        os.mkdir(output_path)
+        os.mkdir(settings.output_path)
     return settings.output_path
 
 def run(args):
     site_path = args.site_path
-    if site_path == 'docs':
-        cwd = os.getcwd()
-        if cwd.endswith('staticpy'):
-            site_path = os.path.join(cwd, 'docs')
-
     if not os.path.isdir(site_path):
         raise IOError('Could not find the path specified %s' % site_path)
 
-
     sys.path.append(site_path)
-
     try:
         import settings
     except:
         global settings
         #it can just be a dummy object, we always verify it has an attribute before getting it
         settings = object()
-
     output_path = get_output_path(site_path)
+    link_static(site_path, output_path)
+
+
     if args.dev:
         #not sure if we want this it is possible that people want to use a different server
         args.serve = True
@@ -76,7 +71,6 @@ def run(args):
         client_js_code = ''
         clients = None
 
-    copy_static(site_path, output_path)
     site = compiler.Site(site_path, settings, client_js_code, args.dev)
 
     print 'Compiling Site: %s' % site_path
