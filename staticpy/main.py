@@ -30,7 +30,9 @@ def upload_to_s3(site_path, aws_keys, bucket):
             return path[0:-5]
         return path
     def file_filter(path):
-        return not path.endswith('.DS_Store')
+        file_name = os.path.basename(path)
+        return not file_name.startswith('.')
+
 
     uploader = BulkUploader(aws_keys, bucket, file_filter, transform)
     uploader.start(site_path)
