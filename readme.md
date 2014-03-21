@@ -47,7 +47,7 @@ Using the dev server these pages are visible at:
 
 	localhost:8080
 	localhost:8080/about
-	localhost:8080/blog/static_site.page
+	localhost:8080/blog/static_site
 
 More to come...
 ======
