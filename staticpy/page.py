@@ -12,6 +12,10 @@ def get_slug(file_path):
     slug = file_name.split('.')[0]
     return slug.replace('_', '-')
 
+def to_list(input):
+    lines = input.split('\n')
+    return [x.strip() for x in lines]
+
 def build_url(path, slug):
     '''Format a url based on a slug and a file path
 
@@ -49,6 +53,11 @@ class Page(object):
         If you try to read an attribute that does not exist the Page object returns an empty string.
     '''
 
+    TRANSFORMS = {
+        'js_imports': to_list,
+        'css_imports': to_list,
+        'order': int
+    }
     def __init__(self, file_path, url_path):
         '''Model a .page file as an object
 
@@ -64,7 +73,7 @@ class Page(object):
         '''
         #we store all of our attributes here
         self.data = {
-            'order': '100' #default here so we don't call int on an empty string
+            'order': '100'
         }
         self.slug = get_slug(file_path)
         self.url = build_url(url_path, self.slug)
@@ -104,6 +113,8 @@ class Page(object):
         #clean up the attribute name/value before we store it
         name = name.strip().replace('-', '_')
         value = value.strip()
+        if name in self.TRANSFORMS:
+            value = self.TRANSFORMS[name](value)
         self.data[name] =  value
 
     def __getattr__(self, name):
