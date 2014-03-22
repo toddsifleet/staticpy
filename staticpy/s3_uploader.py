@@ -34,12 +34,16 @@ class BulkUploader:
         #gets things started
         self.path = path
         queue = Queue.Queue()
+        current_keys = set()
         for (dir_path, dir_name, file_names) in os.walk(path, followlinks = True):
             for file_name in file_names:
                 file_path = os.path.join(dir_path, file_name)
                 if not self.file_filter or self.file_filter(file_path):
                     key = self.transform(file_path)
+                    current_keys.add(key)
                     queue.put((key, file_path))
+
+        self.delete_removed_keys(current_keys)
         threads = []
         for i in range(self.max_threads):
             thread = Worker(self.aws_keys, self.bucket, queue)
@@ -66,6 +70,15 @@ class BulkUploader:
             path = self.key_transform(path)
         path = path[len(self.path)+1::]
         return path.replace('\\', '/')
+
+    def delete_removed_keys(self, current_keys):
+        conn = S3Connection(*self.aws_keys)
+        bucket = conn.get_bucket(self.bucket)
+        old_keys = set([x.name for x in bucket.list()])
+        to_delete = old_keys - current_keys
+        for i in to_delete:
+            print 'Deleting `%s` from S3' % i
+        bucket.delete_keys(to_delete)
 
 class Worker(threading.Thread):
     '''A threaded s3 upload Worker
