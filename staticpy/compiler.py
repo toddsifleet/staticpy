@@ -131,7 +131,7 @@ class Site(object):
                 None
         '''
         self.get_pages()
-        self.navigation_links.sort(key = lambda x: int(x['order']))
+        self.navigation_links.sort(key = lambda x: x['order'])
         self.render_pages(self.output_path, self.page_tree)
         self.render_sitemap()
 
