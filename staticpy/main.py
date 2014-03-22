@@ -4,7 +4,7 @@ import socket_server
 import Queue
 import os
 import sys
-from utils import link_static
+from utils import init_output_dir
 
 
 def upload_to_s3(site_path, aws_keys, bucket):
@@ -58,7 +58,7 @@ def run(args):
         #it can just be a dummy object, we always verify it has an attribute before getting it
         settings = object()
     output_path = get_output_path(site_path)
-    link_static(site_path, output_path)
+    init_output_dir(site_path, output_path)
 
 
     if args.dev:
