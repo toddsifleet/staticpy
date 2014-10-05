@@ -1,9 +1,8 @@
-#dependency (if you want to do anything that has to do with monitoring files check out watchdog)
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 import os
-import sys
 import re
+
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 ignore_patterns = [
     r'\.swp$',
@@ -14,13 +13,13 @@ ignore_patterns = [re.compile(x) for x in ignore_patterns]
 class FileUpdated(FileSystemEventHandler):
     '''Define callbacks for watchdog
 
-        The callback are:
-            static changes: copy new/modified file into output_path/static/..
-            dynamic changes: recompile site
+    The callback are:
+        static changes: copy new/modified file into output_path/static/..
+        dynamic changes: recompile site
 
-            All changes: If self.clients_queue has entris we loop through each
-                client to notify them of the changes, this allows the browser
-                to refresh without user intervention.
+        All changes: If self.clients_queue has entris we loop through each
+            client to notify them of the changes, this allows the browser
+            to refresh without user intervention.
     '''
     def __init__(self, clients_queue, site):
         self.clients_queue = clients_queue
@@ -53,30 +52,26 @@ class FileUpdated(FileSystemEventHandler):
             client = self.clients_queue.get()
             client.send('update')
 
-def monitor_site(site, clients = None):
+
+def monitor_site(site, clients=None):
     '''Monitor site_path for changes
 
-        We start a watchdog observer to monitor the site_path.  Once we are monitoring
-        all of the files we sit and wait for user input telling us to exit.
+    We start a watchdog observer to monitor the site_path.  Once we are
+    monitoring all of the files we sit and wait for user input telling us
+    to exit.
 
-        params:
-            site: a compiler.Site object
-            clients: a Queue.Queue() containing WebSocket clients
-
-        return:
-            None
+    params:
+        site: a compiler.Site object
+        clients: a Queue.Queue() containing WebSocket clients
     '''
-    #dependency (if you want to do anything that has to do with monitoring files check out watchdog)
-    from watchdog.observers import Observer
-    from watchdog.events import FileSystemEventHandler
     observer = Observer()
     for directory in ['dynamic', 'static']:
         path = os.path.join(site.input_path, directory)
         if os.path.isdir(path):
             observer.schedule(
                 FileUpdated(clients, site),
-                path = path,
-                recursive = True
+                path=path,
+                recursive=True
             )
 
     observer.start()

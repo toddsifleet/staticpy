@@ -6,24 +6,35 @@ import os
 import Queue
 import threading
 
+
 class BulkUploader:
     '''Multi-Threaded s3 directory BulkUploader
 
-        Walks a directory uploading everyfile to s3, you can apply filters/transforms to file paths.
-        On start we spawn up to max_threads threads that each upload independently.
+    Walks a directory uploading everyfile to s3, you can apply
+    filters/transforms to file paths.  On start we spawn up to max_threads
+    threads that each upload independently.
 
-        Before uploading a file we verify that the local version is different than the version already
-        in s3, this avoid unneeded uploads.
+    Before uploading a file we verify that the local version is different than
+    the version already in s3, this avoid unneeded uploads.
 
-        params:
-            aws_keys: ('access_key', 'secret_key')
-            bucket: amazon s3 bucket name
-            file_filter: a function that accepts a file path and returns true if you want it uploaded
-            key_transform: a function that accepts a file path and returns the appropriate s3 key_transform
-            max_threads: the max number of threads you want to spawn
+    params:
+        aws_keys: ('access_key', 'secret_key')
+        bucket: amazon s3 bucket name
+        file_filter: a function that accepts a file path and returns true if
+            you want it uploaded
+        key_transform: a function that accepts a file path and returns the
+            appropriate s3 key_transform
+        max_threads: the max number of threads you want to spawn
     '''
 
-    def __init__(self, aws_keys, bucket, file_filter = None, key_transform = None, max_threads = 10):
+    def __init__(
+        self,
+        aws_keys,
+        bucket,
+        file_filter=None,
+        key_transform=None,
+        max_threads=10
+    ):
         self.max_threads = max_threads
         self.aws_keys = aws_keys
         self.bucket = bucket
@@ -31,11 +42,10 @@ class BulkUploader:
         self.file_filter = file_filter
 
     def start(self, path):
-        #gets things started
         self.path = path
         queue = Queue.Queue()
         current_keys = set()
-        for (dir_path, dir_name, file_names) in os.walk(path, followlinks = True):
+        for (dir_path, _, file_names) in os.walk(path, followlinks=True):
             for file_name in file_names:
                 file_path = os.path.join(dir_path, file_name)
                 if not self.file_filter or self.file_filter(file_path):
@@ -50,7 +60,6 @@ class BulkUploader:
             threads.append(thread)
             thread.start()
 
-        #wait untill everything is done
         queue.join()
         for i in threads:
             i.join()
@@ -58,13 +67,13 @@ class BulkUploader:
     def transform(self, path):
         '''Standard transform from path to key_transform
 
-            Calls your custom transform if it exists, strips off the base directory path from
-            the file path and replaces \ with / so they are valid urls.
+        Calls your custom transform if it exists, strips off the base directory
+        path from the file path and replaces \ with / so they are valid urls.
 
-            params:
-                path: path to file
-            returns:
-                key: the s3 key
+        params:
+            path: path to file
+        returns:
+            key: the s3 key
         '''
         if self.key_transform:
             path = self.key_transform(path)
@@ -80,14 +89,15 @@ class BulkUploader:
             print 'Deleting `%s` from S3' % i
         bucket.delete_keys(to_delete)
 
+
 class Worker(threading.Thread):
     '''A threaded s3 upload Worker
 
         Uploads files to s3 that are passed to it through the queue returns
         once the queue is empty.
 
-        Won't upload a specified file if the local MD5 hash is the same as the MD5
-        of the file already on s3.
+        Won't upload a specified file if the local MD5 hash is the same as the
+        MD5 of the file already on s3.
 
         params:
             aws_keys: ('access_key', 'secret_key')
@@ -101,11 +111,10 @@ class Worker(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
 
-
     def run(self):
         self.bucket = Bucket(
-            connection = S3Connection(*self.aws_keys),
-            name = self.bucket
+            connection=S3Connection(*self.aws_keys),
+            name=self.bucket
         )
 
         for key, file_path in IterQueue(self.queue):
@@ -128,6 +137,7 @@ class Worker(threading.Thread):
                 print "Uploading: %s " % key
                 s3_key.set_contents_from_file(fh)
 
+
 class IterQueue:
     '''Iterate through a Queue.Queue instance
 
@@ -135,8 +145,10 @@ class IterQueue:
         to worry about setting anything up.  Runs untill the queue is empty
 
         Calls Queue.task_done when you get the next item.  If you exit the loop
-        early you must call task_done yourself on the queue or queue.join will block.
-        use:
+        early you must call task_done yourself on the queue or queue.join will
+        block.
+
+        Example usage:
             for i in IterQueue(queue):
                 do_something(i)
     '''
