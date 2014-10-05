@@ -7,6 +7,11 @@ import sys
 from utils import init_output_dir
 
 
+class DummySettings(object):
+    base_url = ''
+    def __init__(self, site_path):
+        self.output_path = os.path.join(site_path, '.output')
+
 def upload_to_s3(site_path, aws_keys, bucket):
     '''Upload the site to s3
 
@@ -38,9 +43,6 @@ def upload_to_s3(site_path, aws_keys, bucket):
     uploader.start(site_path)
 
 def get_output_path(site_path):
-    if not hasattr(settings, 'output_path'):
-        settings.output_path = os.path.join(site_path, '.output')
-
     if not os.path.isdir(settings.output_path):
         os.mkdir(settings.output_path)
     return settings.output_path
@@ -56,7 +58,8 @@ def run(args):
     except:
         global settings
         #it can just be a dummy object, we always verify it has an attribute before getting it
-        settings = object()
+        settings = DummySettings(site_path)
+
     output_path = get_output_path(site_path)
     init_output_dir(site_path, output_path)
 
