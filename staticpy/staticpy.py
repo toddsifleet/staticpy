@@ -114,7 +114,8 @@ def run(args):
             observer.stop()
             observer.join()
 
-if __name__ == '__main__':
+
+def parse_args_and_run():
     parser = argparse.ArgumentParser(
         description='''Compile a directory of site data templates, pags, and
         static files into a static website.  Using -dev and -monitor you can
@@ -157,3 +158,6 @@ if __name__ == '__main__':
     )
 
     run(parser.parse_args())
+
+if __name__ == '__main__':
+    parse_args_and_run()
