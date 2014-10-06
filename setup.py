@@ -10,6 +10,11 @@ setup(
         'console_scripts': [
             'staticpy = staticpy.staticpy:parse_args_and_run'
         ]
-    }
+    },
+    install_requires=[
+        'jinja2',
+        'watchdog',
+        'boto',
+    ],
 )
 
