@@ -167,7 +167,7 @@ class WebSocket(object):
         self.close()
 
 
-class WebSocketServer(threading.Thread):
+class SocketServer(threading.Thread):
     '''A simple threaded WebSocketServer
 
         A very simple websocket server, once initialized we bind the socket
@@ -189,10 +189,12 @@ class WebSocketServer(threading.Thread):
 
         threading.Thread.__init__(self)
         self.daemon = True
-        self.host = host
-        self.port = port
-        self.sock = self.bind()
+        self.sock = self.bind(host, port)
         self.client_js_code = client_js_code % (self.host, self.port)
+
+    def start(self):
+        super(SocketServer, self).start()
+        return self
 
     def run(self):
         '''Run server
@@ -211,18 +213,22 @@ class WebSocketServer(threading.Thread):
             t, _ = self.sock.accept()
             self.queue.put(WebSocket(t))
 
-    def bind(self):
+    def bind(self, host, port):
         '''Bind to a socket
 
         Tries to bind to the specified host on the specified port.  If we fails
         to bind the socket we try the next 10 ports in order.  If all 10
         ports fails we raise an exception.
 
-        params: nothings
+        params:
+            host
+            port
         returns:
             success: a socket connection
             failure: raises exception
         '''
+        self.host = host
+        self.port = port
         sock = socket.socket()
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         for i in range(10):
