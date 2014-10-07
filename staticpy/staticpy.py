@@ -51,11 +51,12 @@ def load_settings(site_path):
     sys.path.append(site_path)
     try:
         import settings
-        if not hasattr(settings, 'output_path'):
-            settings.output_path = os.path.join(site_path, '.output')
+        settings.output_path = os.path.join(site_path, '.output')
     except:
-        global settings
         settings = DummySettings(site_path)
+
+    settings.input_path = site_path
+    return settings
 
 
 def parse_args_and_load_settings(func):
@@ -73,37 +74,37 @@ def parse_args_and_load_settings(func):
         )
 
         site_path = parser.parse_args().site_path
-        load_settings(site_path)
+        settings = load_settings(site_path)
         init_output_dir(site_path, settings.output_path)
-        func(site_path)
+        func(settings)
     return wrapped
 
 
 @parse_args_and_load_settings
-def develop(site_path):
+def develop(settings):
 
     socket_server = SocketServer().start()
 
     WebServer(settings.output_path).start()
 
     monitor_site(
-        compile_site(site_path, socket_server.client_js_code, True),
+        compile_site(settings, socket_server.client_js_code, True),
         socket_server.queue
     )
 
 
 @parse_args_and_load_settings
-def upload(site_path):
-    compile_site(site_path)
+def upload(settings):
+    compile_site(settings)
     if hasattr(settings, 's3_bucket'):
         _upload_to_s3(settings)
     else:
         print "No S3 credentials specified"
 
 
-def compile_site(site_path, client_js_code='', dev=False):
-    site = Site(site_path, settings, client_js_code, dev)
-    print 'Compiling Site: %s' % site_path
+def compile_site(settings, client_js_code='', dev=False):
+    site = Site(settings, client_js_code, dev)
+    print 'Compiling Site: %s' % settings.input_path
     print 'Output: %s' % settings.output_path
     site.compile()
     print 'Done Compiling'

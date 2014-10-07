@@ -3,6 +3,7 @@ import os
 from jinja2 import Environment, PackageLoader
 
 from page import Page
+from utils import copy_attrs
 
 
 class Site(object):
@@ -32,26 +33,19 @@ class Site(object):
                 aws_keys = ('access_key', 'private_key')
                 s3_bucket = 'bucket_name'
     '''
-    def __init__(
-        self,
-        input_path,
-        settings,
-        client_js_code=None,
-        include_drafts=False
-    ):
+    def __init__(self, settings, client_js_code=None, include_drafts=False):
         '''Initialize a website
 
         params:
-            input_path: the full directory to the websites files
             settings: an object defining
+                - input_path: the full directory to the websites files
                 - output_path: where you want the resulting files to go
                 - base_url: the url where your website is hosted
             self.client_js_code: A piece of JS to communicate with the server
         '''
+        copy_attrs(self, settings, 'input_path', 'output_path', 'base_url')
+
         self.client_js_code = client_js_code
-        self.input_path = input_path
-        self.output_path = settings.output_path
-        self.base_url = settings.base_url
         self.navigation_links = []
         self.include_drafts = include_drafts
         self.env = Environment(loader=PackageLoader('dynamic', 'templates'))

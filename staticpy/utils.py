@@ -21,3 +21,7 @@ def link_static(site_path, output_path):
         )
     except:
         print '%s/static already exists' % output_path
+
+def copy_attrs(target, source, *attrs):
+    for a in attrs:
+        setattr(target, a, getattr(source, a))

@@ -1,10 +1,12 @@
+import os
+import Queue
+import threading
+
 from boto.s3.connection import S3Connection
 from boto.s3.bucket import Bucket
 from boto.s3.key import Key
 
-import os
-import Queue
-import threading
+from utils import copy_attrs
 
 
 class BulkUploader:
@@ -34,9 +36,7 @@ class BulkUploader:
         key_transform=None,
         max_threads=10
     ):
-        self.aws_keys = settings.aws_keys
-        self.bucket = settings.s3_bucket
-        self.path = settings.output_path
+        copy_attrs(self, settings, 'aws_keys', 's3_bucket', 'output_path')
 
         self.max_threads = max_threads
         self.key_transform = key_transform
@@ -45,7 +45,7 @@ class BulkUploader:
     def start(self):
         queue = Queue.Queue()
         current_keys = set()
-        for (dir_path, _, file_names) in os.walk(self.path, followlinks=True):
+        for (dir_path, _, file_names) in os.walk(self.output_path, followlinks=True):
             for file_name in file_names:
                 file_path = os.path.join(dir_path, file_name)
                 if not self.file_filter or self.file_filter(file_path):
@@ -56,7 +56,7 @@ class BulkUploader:
         self.delete_removed_keys(current_keys)
         threads = []
         for i in range(self.max_threads):
-            thread = Worker(self.aws_keys, self.bucket, queue)
+            thread = Worker(self.aws_keys, self.s3_bucket, queue)
             threads.append(thread)
             thread.start()
 
@@ -77,12 +77,12 @@ class BulkUploader:
         '''
         if self.key_transform:
             path = self.key_transform(path)
-        path = path[len(self.path)+1::]
+        path = path[len(self.output_path)+1::]
         return path.replace('\\', '/')
 
     def delete_removed_keys(self, current_keys):
         conn = S3Connection(*self.aws_keys)
-        bucket = conn.get_bucket(self.bucket)
+        bucket = conn.get_bucket(self.s3_bucket)
         old_keys = set([x.name for x in bucket.list()])
         to_delete = old_keys - current_keys
         for i in to_delete:
