@@ -45,7 +45,7 @@ def _upload_to_s3(settings):
     BulkUploader(settings, file_filter, transform).start()
 
 
-def load_settings(site_path):
+def _load_settings(site_path):
     if not os.path.isdir(site_path):
         raise IOError('Could not find the path specified %s' % site_path)
 
@@ -58,6 +58,15 @@ def load_settings(site_path):
 
     settings.input_path = site_path
     return settings
+
+
+def _compile_site(settings, client_js_code='', dev=False):
+    site = Site(settings, client_js_code, dev)
+    print 'Compiling Site: %s' % settings.input_path
+    print 'Output: %s' % settings.output_path
+    site.compile()
+    print 'Done Compiling'
+    return site
 
 
 def parse_args_and_load_settings(func):
@@ -76,7 +85,7 @@ def parse_args_and_load_settings(func):
         )
 
         site_path = parser.parse_args().site_path
-        settings = load_settings(site_path)
+        settings = _load_settings(site_path)
         init_output_dir(site_path, settings.output_path)
         func(settings)
     return wrapped
@@ -90,24 +99,19 @@ def develop(settings):
     WebServer(settings.output_path).start()
 
     monitor_site(
-        compile_site(settings, socket_server.client_js_code, True),
+        _compile_site(settings, socket_server.client_js_code, True),
         socket_server.queue
     )
 
 
 @parse_args_and_load_settings
 def upload(settings):
-    compile_site(settings)
+    _compile_site(settings)
     if hasattr(settings, 's3_bucket'):
         _upload_to_s3(settings)
     else:
         print "No S3 credentials specified"
 
 
-def compile_site(settings, client_js_code='', dev=False):
-    site = Site(settings, client_js_code, dev)
-    print 'Compiling Site: %s' % settings.input_path
-    print 'Output: %s' % settings.output_path
-    site.compile()
-    print 'Done Compiling'
-    return site
+if __name__ == '__main__':
+    develop()
