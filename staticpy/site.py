@@ -6,52 +6,34 @@ from page import Page
 from utils import copy_attrs
 
 
+def _write_to_file(fp, contents):
+    with open(fp, 'w') as output:
+        output.write(contents)
+
+
 class Site(object):
-    '''A class to represent an entire site
-
-    This class represents and compiles a collection of .page files which
-    represents an entire website.  The url paths match the file structure of
-    your website's directory.
-
-    A website directory should be in the form
-        parent_dir:
-            dynamic:
-                templates: jinja2 templates
-                pages:
-                    index.page
-                    ...
-                    sub_category:
-                        index.page
-                        page1.page
-                        ...
-                        sub_category:
-                            index.page
-                            ...
-            static:
-                files to be copied to the output_path/static
-            settings.py
-                aws_keys = ('access_key', 'private_key')
-                s3_bucket = 'bucket_name'
-    '''
     def __init__(self, settings, client_js_code=None, include_drafts=False):
-        '''Initialize a website
+        '''A staticpy Site Object
 
         params:
             settings: an object defining
                 - input_path: the full directory to the websites files
                 - output_path: where you want the resulting files to go
                 - base_url: the url where your website is hosted
-            self.client_js_code: A piece of JS to communicate with the server
+            client_js_code: A piece of JS to communicate with the server
+            include_drafts: Include pages that have not been published
+
         '''
         copy_attrs(self, settings, 'input_path', 'output_path', 'base_url')
 
         self.client_js_code = client_js_code
-        self.navigation_links = []
         self.include_drafts = include_drafts
-        self.env = Environment(loader=PackageLoader('dynamic', 'templates'))
-        self.sitemap_links = []
 
-    def get_pages(self):
+        self.env = Environment(loader=PackageLoader('dynamic', 'templates'))
+        self.base_template = self._load_template('base.html')
+        self.parent_template = self._load_template('parent_base.html')
+
+    def _get_pages(self):
         '''Get all page data
 
         Walks through the /site_path/dynamic/pages directory and parses
@@ -89,32 +71,16 @@ class Site(object):
             for file_name in [x for x in file_names if x.endswith('.page')]:
                 file_path = os.path.join(pages_dir, dir_path, file_name)
                 page = Page(file_path, dir_path)
-                if not page.published and not self.include_drafts:
+                if not (self.include_drafts or page.published):
                     continue
                 if not page.no_sitemap:
-                    self.sitemap_links.append({
-                        'url': page.url,
-                        'last_modified': page.last_modified,
-                        'change_frequency': page.change_frequency
-                    })
+                    self.sitemap_links.append(page)
                 if page.home_page:
-                    self.add_to_navigation(page)
+                    self.navigation_links.append(page)
                 if file_name == 'index.page':
                     category['index'] = page
                 else:
                     category['pages'].append(page)
-
-    def add_to_navigation(self, page):
-        self.navigation_links.append({
-            'title': page.title,
-            'url': page.url,
-            'order': page.order or 1000
-        })
-
-    def recompile(self):
-        self.navigation_links = []
-        self.sitemap_links = []
-        self.compile()
 
     def compile(self):
         '''Compile entire site_path
@@ -123,18 +89,31 @@ class Site(object):
         -Builds and sorts the navigation_links
         -Renders and writes all pages to the output_path
         '''
+        self.navigation_links = []
+        self.sitemap_links = []
         self.get_pages()
-        self.navigation_links.sort(key=lambda x: x['order'])
-        self.render_pages(self.output_path, self.page_tree)
-        self.render_sitemap()
+        self.navigation_links.sort(key=lambda x: x.order)
+        self._render_pages(self.output_path, self.page_tree)
+        self._render_sitemap()
 
-    def init_category(self, category_path):
+    def _init_category(self, category_path):
         if not os.path.isdir(category_path):
             os.mkdir(category_path)
 
         return category_path
 
-    def write_file(self, file_path, template, page, data=None):
+    def _render_page(self, page, template, **data):
+        if page.template:
+            template = self._load_template(page.template)
+
+        return template.render(
+            page=page,
+            client_js_code=self.client_js_code,
+            navigation_links=self.navigation_links,
+            **data
+        )
+
+    def _write_page(self, file_path, page):
         '''Render and write a page
 
         Given a file_path, template, and page this renders the template
@@ -146,22 +125,13 @@ class Site(object):
             page: a page.Page object containing the pages data
             data <optional>: any additional data to pass into the template
         '''
-        if data is None:
-            data = {}
-        file_path = os.path.join(self.output_path, *file_path)
-        file_path = '%s.html' % file_path
+        file_path = '{path}.html'.format(
+            path=os.path.join(self.output_path, *file_path),
+        )
 
-        page.file_path = file_path
-        with open(file_path, 'w') as out:
-            page = template.render(
-                page=page,
-                client_js_code=self.client_js_code,
-                navigation_links=self.navigation_links,
-                **data
-            )
-            out.write(page)
+        _write_to_file(file_path, page)
 
-    def render_pages(self, base_path, category):
+    def _render_pages(self, base_path, category):
         '''Render and write all pages
 
         Walks through self.page_tree and renders each page and writes
@@ -176,37 +146,35 @@ class Site(object):
             base_path: the path the category we are working with
             category: a dictionary in the form of self.page_tree
         '''
-        base_template = self.env.get_template('base.html')
-        parent_template = self.env.get_template('parent_base.html')
-        page = category['index']
-        if page.template:
-            template = self.env.get_template(page.template)
-        else:
-            template = parent_template
+        self._init_category(base_path)
 
-        self.write_file([base_path, 'index'], template, page, {
-            'children': sorted(category['pages'], key=lambda x: int(x.order))
-        })
+        result = self._render_page(
+            category['index'],
+            self.parent_template,
+            children=sorted(category['pages'], key=lambda x: int(x.order))
+        )
+
+        self._write_page([base_path, 'index'], result)
 
         for page in category['pages']:
-            if page.template:
-                template = self.env.get_template(page.template)
-            else:
-                template = base_template
-            self.write_file([base_path, page.slug], template, page)
+            self._write_page(
+                [base_path, page.slug],
+                self._render_page(page, self.base_template),
+            )
 
         for slug, category in category['sub-categories'].items():
             path = os.path.join(base_path, slug)
-            self.init_category(path)
-            self.render_pages(path, category)
+            self._render_pages(path, category)
 
-    def render_sitemap(self):
-        template = self.env.get_template('sitemap.html')
+    def _load_template(self, name):
+        return self.env.get_template(name)
+
+    def _render_sitemap(self):
+        template = self._load_template('sitemap.html')
         file_path = os.path.join(self.output_path, 'static', 'sitemap.xml')
         site_map = template.render(
             pages=self.sitemap_links,
             base_url=self.base_url
         )
 
-        with open(file_path, 'w') as output:
-            output.write(site_map)
+        _write_to_file(file_path, site_map)
