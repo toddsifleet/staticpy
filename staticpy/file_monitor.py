@@ -59,7 +59,7 @@ def monitor_site(site, clients=None, wait=True):
     to exit.
 
     params:
-        site: a compiler.Site object
+        site: a Site object
         clients: a Queue.Queue() containing WebSocket clients
     '''
     observer = Observer()

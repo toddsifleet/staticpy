@@ -5,7 +5,7 @@ from functools import wraps
 
 from utils import init_output_dir
 from s3_uploader import BulkUploader
-from compiler import Site
+from site import Site
 from socket_server import SocketServer
 from web_server import WebServer
 from file_monitor import monitor_site
