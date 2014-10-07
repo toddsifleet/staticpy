@@ -24,9 +24,7 @@ class FileUpdated(FileSystemEventHandler):
     def __init__(self, clients_queue, site):
         self.clients_queue = clients_queue
         self.site = site
-        self.site_path = site.input_path
-        self.output_path = site.output_path
-        self.static_dir = os.path.join(self.site_path, 'static')
+        self.static_dir = os.path.join(site.input_path, 'static')
         FileSystemEventHandler.__init__(self)
 
     def dispatch(self, file_path):
@@ -37,7 +35,7 @@ class FileUpdated(FileSystemEventHandler):
         if not file_path.startswith(self.static_dir):
             try:
                 print 'Recompiling Site'
-                self.site.recompile()
+                self.site.compile()
                 print 'Done Recompiling'
             except Exception as e:
                 print 'Error Recompiling', e
