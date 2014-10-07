@@ -9,7 +9,7 @@ setup(
     entry_points={
         'console_scripts': [
             'staticpy-dev = staticpy.staticpy:develop',
-            'staticpy-upload = staticpy.staticpy:upload_to_s3'
+            'staticpy-upload = staticpy.staticpy:upload'
         ]
     },
     install_requires=[
