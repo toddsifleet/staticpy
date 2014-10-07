@@ -45,7 +45,6 @@ class FileUpdated(FileSystemEventHandler):
         if self.clients_queue:
             self.notify()
 
-
     def notify(self):
         while not self.clients_queue.empty():
             client = self.clients_queue.get()

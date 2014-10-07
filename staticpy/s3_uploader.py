@@ -45,9 +45,9 @@ class BulkUploader:
     def start(self):
         queue = Queue.Queue()
         current_keys = set()
-        for (dir_path, _, file_names) in os.walk(self.output_path, followlinks=True):
-            for file_name in file_names:
-                file_path = os.path.join(dir_path, file_name)
+        for (path, _, files) in os.walk(self.output_path, followlinks=True):
+            for file_name in files:
+                file_path = os.path.join(path, file_name)
                 if not self.file_filter or self.file_filter(file_path):
                     key = self.transform(file_path)
                     current_keys.add(key)

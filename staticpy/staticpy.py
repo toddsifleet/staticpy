@@ -44,6 +44,7 @@ def _upload_to_s3(settings):
 
     BulkUploader(settings, file_filter, transform).start()
 
+
 def load_settings(site_path):
     if not os.path.isdir(site_path):
         raise IOError('Could not find the path specified %s' % site_path)
@@ -63,9 +64,10 @@ def parse_args_and_load_settings(func):
     @wraps(func)
     def wrapped():
         parser = argparse.ArgumentParser(
-            description='''Compile a directory of site data templates, pags, and
-            static files into a static website.  Using -dev and -monitor you can
-            have the site recompile on all changes and refresh in your browser'''
+            description='''Compile a directory of site data templates, pags,
+            and static files into a static website.  Using -dev and -monitor
+            you can have the site recompile on all changes and refresh in
+            your browser'''
         )
 
         parser.add_argument(
