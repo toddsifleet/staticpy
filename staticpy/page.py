@@ -3,35 +3,37 @@ import os
 import datetime
 
 
-def get_modified_time_stamp(file_path):
-    seconds = os.path.getmtime(file_path)
-    return datetime.datetime.fromtimestamp(seconds)
+def _read_file(path):
+    with open(path) as fp:
+        return fp.readlines()
 
 
-def get_slug(file_path):
-    file_name = os.path.split(file_path)[-1].split('.')[0]
-    slug = file_name.split('.')[0]
-    return slug.replace('_', '-')
+def _parse_file(path):
+    '''Parse a .page file_path
 
+    Read a .page file and convert each of the attributes it defines
+    into attributes of this object.  Values can be more than one line
+    the only rule is you can't start a line with :string: as this is what
+    indicates a new attribute name
 
-def to_list(input):
-    lines = input.split('\n')
-    return [x.strip() for x in lines]
-
-
-def build_url(path, slug):
-    '''Format a url based on a slug and a file path
-
-    Note: for pages with the slug index we omit the slug from the url
-
-    returns: a url string
+    params: path
     '''
-    if not path:
-        return '' if slug == 'index' else slug
+    output = {}
 
-    path_pieces = os.path.split(path.strip('\\/'))
-    url = '/'.join([x for x in path_pieces if x])
-    return url if slug == 'index' else '%s/%s' % (url, slug)
+    attribute, value = '', ''
+    name_regex = re.compile('^:(?P<attribute>[a-z\-_]+):\s*(?P<value>.*)$')
+    for line in _read_file(path):
+        data = name_regex.match(line)
+        if data:
+            if value:
+                output[attribute] = value.strip()
+
+            attribute = data.group('attribute')
+            value = data.group('value')
+        else:
+            value += "\n" + line.strip()
+    output[attribute] = value.strip()
+    return output
 
 
 class Page(object):
@@ -55,12 +57,6 @@ class Page(object):
     returns an empty string.
     '''
 
-    TRANSFORMS = {
-        'js_imports': to_list,
-        'css_imports': to_list,
-        'order': int
-    }
-
     def __init__(self, file_path, url_path):
         '''Model a .page file as an object
 
@@ -74,51 +70,59 @@ class Page(object):
                 e.g. projects
 
         '''
-        self.data = {
-            'order': '100'
-        }
-        self.slug = get_slug(file_path)
-        self.url = build_url(url_path, self.slug)
-        self.path = url_path or 'home'
-        self.parse(file_path)
-        self.last_modified = get_modified_time_stamp(file_path)
+        self.data = {}
+        self.file_path = file_path
+        self.url_path = url_path
+        self.load()
 
-    def parse(self, file_path):
-        '''Parse a .page file_path
-
-        Read a .page file and convert each of the attributes it defines
-        into attributes of this object.  Values can be more than one line
-        the only rule is you can't start a line with :string: as this is what
-        indicates a new attribute name
-
-        params: file_path
-        '''
-        with open(file_path) as fp:
-            lines = fp.readlines()
-
-        attribute, value = '', ''
-        name_regex = re.compile('^:(?P<attribute>[a-z\-_]+):\s*(?P<value>.*)$')
-        for line in lines:
-            data = name_regex.match(line)
-            if data:
-                if value:
-                    value = value.strip()
-                    self.set(attribute, value)
-
-                attribute = data.group('attribute')
-                value = data.group('value')
-            else:
-                value += line
-        self.set(attribute, value)
+    def load(self):
+        attrs = _parse_file(self.file_path)
+        for k, v in attrs.items():
+            self.set(k, v)
 
     def set(self, name, value):
         name = name.strip().replace('-', '_')
-        value = value.strip()
-        if name in self.TRANSFORMS:
-            value = self.TRANSFORMS[name](value)
-        self.data[name] = value
+        self.data[name] = value.strip()
 
     def __getattr__(self, name):
-        if name in self.data:
-            return self.data[name]
-        return ''
+        return self.data.get(name, '')
+
+    @property
+    def slug(self):
+        file_name = os.path.split(self.file_path)[-1].split('.')[0]
+        slug = file_name.split('.')[0]
+        return slug.replace('_', '-')
+
+    @property
+    def url(self):
+        if not self.url_path:
+            return '' if self.slug == 'index' else self.slug
+
+        path_pieces = os.path.split(self.url_path.strip('\\/'))
+        url = '/'.join([x for x in path_pieces if x])
+        return url if self.slug == 'index' else '%s/%s' % (url, self.slug)
+
+    @property
+    def last_modified(self):
+        seconds = os.path.getmtime(self.file_path)
+        return datetime.datetime.fromtimestamp(seconds)
+
+    @property
+    def path(self):
+        return self.url_path or 'home'
+
+    @property
+    def order(self):
+        return int(self.data.get('order', 100))
+
+    @property
+    def js_imports(self):
+        return self.to_list('js_imports')
+
+    @property
+    def css_imports(self):
+        return self.to_list('css_imports')
+
+    def to_list(self, name):
+        lines = self.data.get(name, '').split('\n')
+        return [x.strip() for x in lines]
