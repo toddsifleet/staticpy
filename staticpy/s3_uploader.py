@@ -29,23 +29,23 @@ class BulkUploader:
 
     def __init__(
         self,
-        aws_keys,
-        bucket,
+        settings,
         file_filter=None,
         key_transform=None,
         max_threads=10
     ):
+        self.aws_keys = settings.aws_keys
+        self.bucket = settings.s3_bucket
+        self.path = settings.output_path
+
         self.max_threads = max_threads
-        self.aws_keys = aws_keys
-        self.bucket = bucket
         self.key_transform = key_transform
         self.file_filter = file_filter
 
-    def start(self, path):
-        self.path = path
+    def start(self):
         queue = Queue.Queue()
         current_keys = set()
-        for (dir_path, _, file_names) in os.walk(path, followlinks=True):
+        for (dir_path, _, file_names) in os.walk(self.path, followlinks=True):
             for file_name in file_names:
                 file_path = os.path.join(dir_path, file_name)
                 if not self.file_filter or self.file_filter(file_path):

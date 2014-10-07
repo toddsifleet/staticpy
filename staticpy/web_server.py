@@ -36,7 +36,7 @@ class TestServer(SocketServer.TCPServer):
     allow_reuse_address = True
 
 
-class Server(threading.Thread):
+class WebServer(threading.Thread):
     def __init__(self, site_path, host=None, port=8880):
         '''A single threaded SimpleHTTPServer
 

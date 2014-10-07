@@ -4,10 +4,11 @@ import argparse
 from functools import wraps
 
 from utils import init_output_dir
-import compiler
-import socket_server
-import web_server
-import file_monitor
+from s3_uploader import BulkUploader
+from compiler import Site
+from socket_server import SocketServer
+from web_server import WebServer
+from file_monitor import monitor_site
 
 
 class DummySettings(object):
@@ -20,21 +21,16 @@ class DummySettings(object):
 def _upload_to_s3(settings):
     '''Upload the site to s3
 
-        Given a site_path, access credentials and an s3 buck name we upload
+        Given a settings object with s3 credentials and a bucket name we upload
         the compiled results to s3.
 
         We transform the individual file paths to remove .html unless they are
         index.html files.  This allows us to have pretty urls like
         /path/to/page.
 
-        We filter out .DS_Store files as well
         params:
-            site_path: the path to our files
-            aws_keys: ('access_key', 'secret_key')
-            bucket: s3 bucket bucket_name
+            settings
     '''
-    from s3_uploader import BulkUploader
-
     def transform(path):
         if path.endswith('index.html'):
             return path
@@ -46,13 +42,7 @@ def _upload_to_s3(settings):
         file_name = os.path.basename(path)
         return not file_name.startswith('.')
 
-    uploader = BulkUploader(
-        settings.aws_keys,
-        settings.s3_bucket,
-        file_filter,
-        transform
-    )
-    uploader.start(settings.output_path)
+    BulkUploader(settings, file_filter, transform).start()
 
 def load_settings(site_path):
     if not os.path.isdir(site_path):
@@ -92,28 +82,27 @@ def parse_args_and_load_settings(func):
 @parse_args_and_load_settings
 def develop(site_path):
 
-    update_server = socket_server.WebSocketServer()
-    update_server.start()
+    socket_server = SocketServer().start()
 
-    web_server.Server(settings.output_path).start()
+    WebServer(settings.output_path).start()
 
-    file_monitor.monitor_site(
-        compile_site(site_path, update_server.client_js_code, True),
-        update_server.queue
+    monitor_site(
+        compile_site(site_path, socket_server.client_js_code, True),
+        socket_server.queue
     )
 
 
 @parse_args_and_load_settings
 def upload(site_path):
     compile_site(site_path)
-    if hasattr(settings, 's3_bucket') and hasattr(settings, 'aws_keys'):
+    if hasattr(settings, 's3_bucket'):
         _upload_to_s3(settings)
     else:
         print "No S3 credentials specified"
 
 
 def compile_site(site_path, client_js_code='', dev=False):
-    site = compiler.Site(site_path, settings, client_js_code, dev)
+    site = Site(site_path, settings, client_js_code, dev)
     print 'Compiling Site: %s' % site_path
     print 'Output: %s' % settings.output_path
     site.compile()
