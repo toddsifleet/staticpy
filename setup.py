@@ -8,7 +8,8 @@ setup(
     packages=['staticpy'],
     entry_points={
         'console_scripts': [
-            'staticpy = staticpy.staticpy:parse_args_and_run'
+            'staticpy-dev = staticpy.staticpy:develop',
+            'staticpy-upload = staticpy.staticpy:upload_to_s3'
         ]
     },
     install_requires=[

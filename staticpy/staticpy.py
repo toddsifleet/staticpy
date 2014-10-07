@@ -1,10 +1,13 @@
-import argparse
-import compiler
-import socket_server
-import Queue
 import os
 import sys
+import argparse
+from functools import wraps
+
 from utils import init_output_dir
+import compiler
+import socket_server
+import web_server
+import file_monitor
 
 
 class DummySettings(object):
@@ -14,7 +17,7 @@ class DummySettings(object):
         self.output_path = os.path.join(site_path, '.output')
 
 
-def upload_to_s3(settings):
+def _upload_to_s3(settings):
     '''Upload the site to s3
 
         Given a site_path, access credentials and an s3 buck name we upload
@@ -51,9 +54,7 @@ def upload_to_s3(settings):
     )
     uploader.start(settings.output_path)
 
-
-def run(args):
-    site_path = args.site_path
+def load_settings(site_path):
     if not os.path.isdir(site_path):
         raise IOError('Could not find the path specified %s' % site_path)
 
@@ -66,98 +67,55 @@ def run(args):
         global settings
         settings = DummySettings(site_path)
 
-    init_output_dir(site_path, settings.output_path)
 
-    if args.dev:
-        args.serve = True
-        args.monitor = True
-        clients = Queue.Queue()
-        server = socket_server.WebSocketServer(clients)
-        client_js_code = server.client_js_code
-        server.start()
+def parse_args_and_load_settings(func):
+    @wraps(func)
+    def wrapped():
+        parser = argparse.ArgumentParser(
+            description='''Compile a directory of site data templates, pags, and
+            static files into a static website.  Using -dev and -monitor you can
+            have the site recompile on all changes and refresh in your browser'''
+        )
+
+        parser.add_argument(
+            'site_path',
+            help="The path to the to your website's data",
+        )
+
+        site_path = parser.parse_args().site_path
+        load_settings(site_path)
+        init_output_dir(site_path, settings.output_path)
+        func(site_path)
+    return wrapped
+
+
+@parse_args_and_load_settings
+def develop(site_path):
+
+    update_server = socket_server.WebSocketServer()
+    update_server.start()
+
+    web_server.Server(settings.output_path).start()
+
+    file_monitor.monitor_site(
+        compile_site(site_path, update_server.client_js_code, True),
+        update_server.queue
+    )
+
+
+@parse_args_and_load_settings
+def upload(site_path):
+    compile_site(site_path)
+    if hasattr(settings, 's3_bucket') and hasattr(settings, 'aws_keys'):
+        _upload_to_s3(settings)
     else:
-        client_js_code = ''
-        clients = None
+        print "No S3 credentials specified"
 
-    site = compiler.Site(site_path, settings, client_js_code, args.dev)
 
+def compile_site(site_path, client_js_code='', dev=False):
+    site = compiler.Site(site_path, settings, client_js_code, dev)
     print 'Compiling Site: %s' % site_path
     print 'Output: %s' % settings.output_path
     site.compile()
     print 'Done Compiling'
-
-    if args.upload:
-        if hasattr(settings, 's3_bucket') and hasattr(settings, 'aws_keys'):
-            upload_to_s3(settings)
-        else:
-            print '''settings.py must includ:
-
-    aws_keys = ("access_key", "private_key")
-    s3_bucket = "bucket_name"
-
-
-    In order to upload to S3...'''
-
-    if args.serve:
-        import web_server
-        web_server.Server(settings.output_path).start()
-
-    if args.monitor:
-        import file_monitor
-        observer = file_monitor.monitor_site(site, clients)
-
-    if args.monitor or args.serve:
-        raw_input('Running: press enter to quit...')
-
-        print 'Shutting Down'
-        if args.monitor:
-            observer.stop()
-            observer.join()
-
-
-def parse_args_and_run():
-    parser = argparse.ArgumentParser(
-        description='''Compile a directory of site data templates, pags, and
-        static files into a static website.  Using -dev and -monitor you can
-        have the site recompile on all changes and refresh in your browser'''
-    )
-
-    parser.add_argument(
-        '-monitor',
-        dest='monitor',
-        action='store_true',
-        help='Monitor your files and automatically update when a file is saved'
-    )
-
-    parser.add_argument(
-        '-dev',
-        dest='dev',
-        action='store_true',
-        help='''Enable all active development features, including monitor.
-        Anything hidden behind and {% if dev %} in your templates will be
-        displayed.  Start server to notify browsers of changes'''
-    )
-
-    parser.add_argument(
-        '-s3',
-        dest='upload',
-        action='store_true',
-        help="Upload to the s3 bucket defined in your site's settings.py file"
-    )
-
-    parser.add_argument(
-        '-serve',
-        dest='serve',
-        action='store_true',
-        help='Start a basic dev server to serve the static webpages'
-    )
-
-    parser.add_argument(
-        'site_path',
-        help="The path to the to your website's data",
-    )
-
-    run(parser.parse_args())
-
-if __name__ == '__main__':
-    parse_args_and_run()
+    return site

@@ -1,3 +1,4 @@
+import Queue
 import socket
 import threading
 import hashlib
@@ -175,17 +176,16 @@ class WebSocketServer(threading.Thread):
         created WebSocket is placed on the queue expecting the parent process
         to handle it.
     '''
-    def __init__(self, queue, host='localhost', port=8888):
+    def __init__(self, host='localhost', port=8888):
         '''WebSocketServer initializer
 
         params:
-            queue: the Queue.Queue() to place the connections on
             host: the host to connect if not set:
                 socket.gethostbyname(socket.gethostname())
             port: the port to try to connect on.  If this fails
                 we will try to bind to 10 higher ports until we are successful.
         '''
-        self.queue = queue
+        self.queue = Queue.Queue()
 
         threading.Thread.__init__(self)
         self.daemon = True

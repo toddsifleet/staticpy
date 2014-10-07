@@ -45,7 +45,6 @@ class FileUpdated(FileSystemEventHandler):
         if self.clients_queue:
             self.notify()
 
-        print 'Running: press enter to quit...'
 
     def notify(self):
         while not self.clients_queue.empty():
@@ -53,7 +52,7 @@ class FileUpdated(FileSystemEventHandler):
             client.send('update')
 
 
-def monitor_site(site, clients=None):
+def monitor_site(site, clients=None, wait=True):
     '''Monitor site_path for changes
 
     We start a watchdog observer to monitor the site_path.  Once we are
@@ -75,4 +74,8 @@ def monitor_site(site, clients=None):
             )
 
     observer.start()
-    return observer
+    if wait:
+        raw_input('Running: press enter to quit...')
+        print 'Shutting Down'
+        observer.stop()
+        observer.join()
