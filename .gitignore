@@ -1,4 +1,5 @@
 *.pyc
+*.output
 .DS_Store
 docs/output*
 /*.egg-info
