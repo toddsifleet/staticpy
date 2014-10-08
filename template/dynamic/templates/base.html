@@ -1,0 +1,51 @@
+<html>
+  <head>
+    {{ client_js_code }}
+    <meta name="msvalidate.01" content="EE224A87A74468D1C27B404FE134DC6C" />
+    {% if page.meta_description %}<meta name="description" content = "{{ page.meta_description }}">{% endif %}
+    {% if page.meta_keywords %}<meta name="keywords" content="{{ page.meta_keywords }}">{% endif %}
+      {% for css_file in page.css_imports %}
+        <link href="{{css_file}}" rel="stylesheet" />
+      {% endfor %}
+      <style>
+        {{ page.styles | safe }}
+      </style>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    {% if page.title %}
+      <title>{{ page.title }}</title>
+    {% endif %}
+  </head>
+  <body>
+    <div class="container">
+      <div class="navigation">
+        <ul>
+          {% for link in navigation_links %}
+            {% if link.url == page.url %}
+              <li>{{ link.title }}</li>
+            {% else %}
+              <a href="/{{ link.url }}">
+                <li>{{ link.title }}</li>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="inner-container" >
+        <h1 class="title">
+          {{ page.title }}
+        </h1>
+        <div class="content">
+          {% block content %}
+            {{ page.content | safe}}
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      Footer -- Staticpy Template Site
+    </div>
+  </body>
+  {% for script in page.js_imports %}
+    <script src="{{script}}"></script>
+  {% endfor %}
+</html>

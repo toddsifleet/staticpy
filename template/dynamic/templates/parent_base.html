@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+  {% if page.content %}
+    <div class="parent-description">
+      {{ page.content }}
+    </div>
+  {% endif %}
+  {% for page in children %}
+    <div class="entry">
+      <h2 class="entry-title">
+        <a href="/{{ page.url }}">{{ page.title }}</a>
+      </h2>
+      <div class="description">
+        {{ page.description | safe }}
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}
