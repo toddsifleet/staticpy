@@ -1,21 +1,13 @@
 import os
-import sys
 import argparse
 from functools import wraps
 
-from utils import init_output_dir
+from utils import init_output_dir, load_settings
 from s3_uploader import BulkUploader
 from site import Site
 from socket_server import SocketServer
 from web_server import WebServer
 from file_monitor import monitor_site
-
-
-class DummySettings(object):
-    base_url = ''
-
-    def __init__(self, site_path):
-        self.output_path = os.path.join(site_path, '.output')
 
 
 def _upload_to_s3(settings):
@@ -45,26 +37,11 @@ def _upload_to_s3(settings):
     BulkUploader(settings, file_filter, transform).start()
 
 
-def _load_settings(site_path):
-    if not os.path.isdir(site_path):
-        raise IOError('Could not find the path specified %s' % site_path)
-
-    sys.path.append(site_path)
-    try:
-        import settings
-        settings.output_path = os.path.join(site_path, '.output')
-    except:
-        settings = DummySettings(site_path)
-
-    settings.input_path = site_path
-    return settings
-
-
 def _compile_site(settings, client_js_code='', dev=False):
     site = Site(settings, client_js_code, dev)
     print 'Compiling Site: %s' % settings.input_path
     print 'Output: %s' % settings.output_path
-    site.compile()
+    site.compile().save()
     print 'Done Compiling'
     return site
 
@@ -85,7 +62,7 @@ def parse_args_and_load_settings(func):
         )
 
         site_path = parser.parse_args().site_path
-        settings = _load_settings(site_path)
+        settings = load_settings(site_path)
         init_output_dir(site_path, settings.output_path)
         func(settings)
     return wrapped

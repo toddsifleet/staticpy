@@ -93,8 +93,12 @@ class Site(object):
         self.sitemap_links = []
         self._get_pages()
         self.navigation_links.sort(key=lambda x: x.order)
+        return self
+
+    def save(self):
         self._render_pages(self.output_path, self.page_tree)
         self._render_sitemap()
+        return self
 
     def _init_category(self, category_path):
         if not os.path.isdir(category_path):

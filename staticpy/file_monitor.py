@@ -35,7 +35,7 @@ class FileUpdated(FileSystemEventHandler):
         if not file_path.startswith(self.static_dir):
             try:
                 print 'Recompiling Site'
-                self.site.compile()
+                self.site.compile().save()
                 print 'Done Recompiling'
             except Exception as e:
                 print 'Error Recompiling', e
