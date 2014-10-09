@@ -27,16 +27,16 @@ class TestCompilingSite(object):
         category = self.site.page_tree['sub-categories']['category']
         page = category['index']
         assert page.title == 'Category'
-        assert len(category['pages']) == 1
+        assert len(page.children) == 1
         assert page.published
 
     def test_sub_page(self):
-        page = self.site.page_tree['sub-categories']['category']['pages'][0]
-        assert page.title == 'A Sub Page'
+        page = self.site.page_tree['sub-categories']['category']['index']
+        assert page.children[0].title == 'A Sub Page'
         assert page.published
 
 
-class TestWritingSite(object):
+class TestRenderingSite(object):
     """Haven't decied how to tes this"""
     def setup_method(self, method):
         self.settings = settings()

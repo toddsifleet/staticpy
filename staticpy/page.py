@@ -2,6 +2,8 @@ import re
 import os
 import datetime
 
+from jinja2 import Environment, PackageLoader
+
 
 def _read_file(path):
     with open(path) as fp:
@@ -57,7 +59,13 @@ class Page(object):
     returns an empty string.
     '''
 
-    def __init__(self, file_path, url_path):
+    def __init__(
+        self,
+        file_path,
+        url_path,
+        navigation_links=None,
+        client_js_code=None
+    ):
         '''Model a .page file as an object
 
         Read and parse .page file by default this sets: slug, url, path;
@@ -71,8 +79,14 @@ class Page(object):
 
         '''
         self.data = {}
+        self._env = None
+        self.children = []
+
+        self.navigation_links = navigation_links
+        self.client_js_code = client_js_code
         self.file_path = file_path
         self.url_path = url_path
+
         self.load()
 
     def load(self):
@@ -86,6 +100,10 @@ class Page(object):
 
     def __getattr__(self, name):
         return self.data.get(name, '')
+
+    def _to_list(self, name):
+        lines = self.data.get(name, '').split('\n')
+        return [x.strip() for x in lines]
 
     @property
     def slug(self):
@@ -117,12 +135,34 @@ class Page(object):
 
     @property
     def js_imports(self):
-        return self.to_list('js_imports')
+        return self._to_list('js_imports')
 
     @property
     def css_imports(self):
-        return self.to_list('css_imports')
+        return self._to_list('css_imports')
 
-    def to_list(self, name):
-        lines = self.data.get(name, '').split('\n')
-        return [x.strip() for x in lines]
+    @property
+    def html(self):
+        return self.template.render(
+            page=self,
+            navigation_links=self.navigation_links,
+            client_js_code=self.client_js_code,
+            children=sorted(self.children, key=lambda x: x.order),
+        )
+
+    @property
+    def template(self):
+        name = self.data.get('template')
+        if not name:
+            if self.slug == 'index':
+                name = 'parent_base.html'
+            else:
+                name = 'base.html'
+        return self._load_template(name)
+
+    def _load_template(self, name):
+        if not self._env:
+            self._env = Environment(
+                loader=PackageLoader('dynamic', 'templates')
+            )
+        return self._env.get_template(name)
