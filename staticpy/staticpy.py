@@ -41,7 +41,7 @@ def _compile_site(settings, client_js_code='', dev=False):
     site = Site(settings, client_js_code, dev)
     print 'Compiling Site: %s' % settings.input_path
     print 'Output: %s' % settings.output_path
-    site.compile().save()
+    site.save()
     print 'Done Compiling'
     return site
 

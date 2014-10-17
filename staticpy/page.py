@@ -63,8 +63,7 @@ class Page(object):
         self,
         file_path,
         url_path,
-        navigation_links=None,
-        client_js_code=None
+        category,
     ):
         '''Model a .page file as an object
 
@@ -80,10 +79,9 @@ class Page(object):
         '''
         self.data = {}
         self._env = None
-        self.children = []
 
-        self.navigation_links = navigation_links
-        self.client_js_code = client_js_code
+        self.site = category.site
+        self.category = category
         self.file_path = file_path
         self.url_path = url_path
 
@@ -143,11 +141,14 @@ class Page(object):
 
     @property
     def html(self):
+        return self._html()
+
+    def _html(self, **data):
         return self.template.render(
             page=self,
-            navigation_links=self.navigation_links,
-            client_js_code=self.client_js_code,
-            children=sorted(self.children, key=lambda x: x.order),
+            navigation_links=self.site.navigation_links,
+            client_js_code=self.site.client_js_code,
+            **data
         )
 
     @property
@@ -166,3 +167,33 @@ class Page(object):
                 loader=PackageLoader('dynamic', 'templates')
             )
         return self._env.get_template(name)
+
+    @property
+    def peers(self):
+        peers = [p for p in self.category.pages if p.slug != self.slug]
+        for p in peers:
+            print p.slug
+        return sorted(peers, key=lambda x: x.order)
+
+    @property
+    def prev(self):
+        prev_page = None
+        for p in self.site.pages:
+            if p == self:
+                return prev_page
+            prev_page = p
+
+    @property
+    def next(self):
+        found = False
+        for p in self.site.pages:
+            if found:
+                return p
+            found = p == self
+
+
+class ParentPage(Page):
+
+    @property
+    def html(self):
+        return self._html(children=self.peers)
