@@ -171,8 +171,6 @@ class Page(object):
     @property
     def peers(self):
         peers = [p for p in self.category.pages if p.slug != self.slug]
-        for p in peers:
-            print p.slug
         return sorted(peers, key=lambda x: x.order)
 
     @property

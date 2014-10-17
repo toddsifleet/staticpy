@@ -33,6 +33,10 @@ class Category(object):
             if page.slug == 'index':
                 return page
 
+    @property
+    def children(self):
+        return [p for p in self.pages if p.slug != 'index']
+
     def _new_page(self, path):
         args = (path, self.url_path, self)
         if path.endswith('index.page'):
