@@ -77,7 +77,7 @@ class Page(object):
                 e.g. projects
 
         '''
-        self.data = {}
+        self._data = {}
         self._env = None
 
         self.site = category.site
@@ -94,13 +94,13 @@ class Page(object):
 
     def set(self, name, value):
         name = name.strip().replace('-', '_')
-        self.data[name] = value.strip()
+        self._data[name] = value.strip()
 
     def __getattr__(self, name):
-        return self.data.get(name, '')
+        return self._data.get(name, '')
 
     def _to_list(self, name):
-        lines = self.data.get(name, '').split('\n')
+        lines = self._data.get(name, '').split('\n')
         return [x.strip() for x in lines]
 
     @property
@@ -129,7 +129,7 @@ class Page(object):
 
     @property
     def order(self):
-        return int(self.data.get('order', 100))
+        return int(self._data.get('order', 100))
 
     @property
     def js_imports(self):
@@ -153,30 +153,26 @@ class Page(object):
 
     @property
     def template(self):
-        name = self.data.get('template')
-        if not name:
-            if self.slug == 'index':
-                name = 'parent_base.html'
-            else:
-                name = 'base.html'
-        return self._load_template(name)
-
-    def _load_template(self, name):
         if not self._env:
             self._env = Environment(
                 loader=PackageLoader('dynamic', 'templates')
             )
-        return self._env.get_template(name)
+        return self._env.get_template(self._template_name)
 
     @property
-    def peers(self):
-        peers = [p for p in self.category.pages if p.slug != self.slug]
-        return sorted(peers, key=lambda x: x.order)
+    def _template_name(self):
+        name = self._data.get('template')
+        if not name:
+            if self.slug == 'index':
+                name = 'parent_base.html'
+            else:
+                name = self.category.child_template
+        return name
 
     @property
     def prev(self):
         prev_page = None
-        for p in self.site.pages:
+        for p in self.category.children:
             if p == self:
                 return prev_page
             prev_page = p
@@ -184,7 +180,7 @@ class Page(object):
     @property
     def next(self):
         found = False
-        for p in self.site.pages:
+        for p in self.category.children:
             if found:
                 return p
             found = p == self
@@ -194,4 +190,8 @@ class ParentPage(Page):
 
     @property
     def html(self):
-        return self._html(children=self.peers)
+        return self._html(children=self.category.children)
+
+    @property
+    def children(self):
+        return self.category.children

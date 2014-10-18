@@ -8,11 +8,14 @@ class Category(object):
     def __init__(self, site, path):
         self.site = site
         self.path = path
+        self._pages = None
 
     @property
     def pages(self):
-        pages = [p for p in self._list_dir() if p.endswith('.page')]
-        return [self._new_page(p) for p in pages]
+        if self._pages is None:
+            pages = [p for p in self._list_dir() if p.endswith('.page')]
+            self._pages = [self._new_page(p) for p in pages]
+        return self._pages
 
     @property
     def categories(self):
@@ -35,7 +38,8 @@ class Category(object):
 
     @property
     def children(self):
-        return [p for p in self.pages if p.slug != 'index']
+        pages = [p for p in self.pages if p.slug != 'index']
+        return sorted(pages, key=lambda x: x.order)
 
     def _new_page(self, path):
         args = (path, self.url_path, self)
@@ -50,3 +54,7 @@ class Category(object):
         for category in self.categories:
             pages.extend(category.sub_pages)
         return pages
+
+    @property
+    def child_template(self):
+        return self.index.child_template or 'base.html'
