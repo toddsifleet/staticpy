@@ -10,11 +10,14 @@ class Category(object):
         self.path = path
         self._pages = None
 
+    def load(self):
+        pages = [p for p in self._list_dir() if p.endswith('.page')]
+        self._pages = [self._new_page(p) for p in pages]
+
     @property
     def pages(self):
         if self._pages is None:
-            pages = [p for p in self._list_dir() if p.endswith('.page')]
-            self._pages = [self._new_page(p) for p in pages]
+            self.load()
         return self._pages
 
     @property

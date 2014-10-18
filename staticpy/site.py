@@ -58,6 +58,7 @@ class Site(object):
             os.path.join(self.output_path, category.url_path)
         )
 
+        category.load()
         for page in category.pages:
             self._write_page([category.url_path, page.slug], page.html)
 
