@@ -12,7 +12,10 @@ class Category(object):
 
     def load(self):
         pages = [p for p in self._list_dir() if p.endswith('.page')]
-        self._pages = [self._new_page(p) for p in pages]
+        pages = [self._new_page(p) for p in pages]
+        if not self.site.include_drafts:
+            pages = [p for p in pages if p.published]
+        self._pages = pages
 
     @property
     def pages(self):
