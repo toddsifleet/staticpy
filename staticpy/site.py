@@ -60,7 +60,8 @@ class Site(object):
 
         category.load()
         for page in category.pages:
-            self._write_page([category.url_path, page.slug], page.html)
+            if page.html:
+                self._write_page([category.url_path, page.slug], page.html)
 
         for category in category.categories:
             self._write_category(category)

@@ -111,7 +111,9 @@ class Page(object):
 
     @property
     def url(self):
-        if not self.url_path:
+        if self._data.get('url'):
+            return self._data['url']
+        elif not self.url_path:
             return '' if self.slug == 'index' else self.slug
 
         path_pieces = os.path.split(self.url_path.strip('\\/'))
@@ -144,6 +146,9 @@ class Page(object):
         return self._html()
 
     def _html(self, **data):
+        if self.no_render:
+            return None
+
         return self.template.render(
             page=self,
             navigation_links=self.site.navigation_links,
