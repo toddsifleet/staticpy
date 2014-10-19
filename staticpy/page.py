@@ -161,6 +161,10 @@ class Page(object):
         )
 
     @cached_property
+    def no_render(self):
+        return self._get('url')
+
+    @cached_property
     def template(self):
         if not self._env:
             self._env = Environment(
