@@ -100,10 +100,10 @@ class Page(object):
         self._data[name] = value.strip()
 
     def __getattr__(self, name):
-        return self._data.get(name, '')
+        return self._get(name, '')
 
     def _to_list(self, name):
-        lines = self._data.get(name, '').split('\n')
+        lines = self._get(name, '').split('\n')
         return [x.strip() for x in lines]
 
     @cached_property
@@ -114,8 +114,8 @@ class Page(object):
 
     @cached_property
     def url(self):
-        if self._data.get('url'):
-            return self._data['url']
+        if self._get('url'):
+            return self._get('url')
         elif not self.url_path:
             return '/' if self.slug == 'index' else '/' + self.slug
 
@@ -134,7 +134,7 @@ class Page(object):
 
     @cached_property
     def order(self):
-        return int(self._data.get('order', 100))
+        return int(self._get('order', 100))
 
     @cached_property
     def js_imports(self):
@@ -170,7 +170,7 @@ class Page(object):
 
     @cached_property
     def _template_name(self):
-        name = self._data.get('template')
+        name = self._get('template')
         if not name:
             if self.slug == 'index':
                 name = 'parent_base.html'
@@ -194,6 +194,8 @@ class Page(object):
                 return p
             found = p == self
 
+    def _get(self, key, default=None):
+        return self._data.get(key, default)
 
 class ParentPage(Page):
 
