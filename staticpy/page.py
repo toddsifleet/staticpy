@@ -4,6 +4,8 @@ import datetime
 
 from jinja2 import Environment, PackageLoader
 
+from utils import cached_property
+
 
 def _read_file(path):
     with open(path) as fp:
@@ -84,6 +86,7 @@ class Page(object):
         self.category = category
         self.file_path = file_path
         self.url_path = url_path
+        self._cache = None
 
         self.load()
 
@@ -103,13 +106,13 @@ class Page(object):
         lines = self._data.get(name, '').split('\n')
         return [x.strip() for x in lines]
 
-    @property
+    @cached_property
     def slug(self):
         file_name = os.path.split(self.file_path)[-1].split('.')[0]
         slug = file_name.split('.')[0]
         return slug.replace('_', '-')
 
-    @property
+    @cached_property
     def url(self):
         if self._data.get('url'):
             return self._data['url']
@@ -120,28 +123,28 @@ class Page(object):
         url = '/' + '/'.join([x for x in path_pieces if x])
         return url if self.slug == 'index' else '%s/%s' % (url, self.slug)
 
-    @property
+    @cached_property
     def last_modified(self):
         seconds = os.path.getmtime(self.file_path)
         return datetime.datetime.fromtimestamp(seconds)
 
-    @property
+    @cached_property
     def path(self):
         return self.url_path or 'home'
 
-    @property
+    @cached_property
     def order(self):
         return int(self._data.get('order', 100))
 
-    @property
+    @cached_property
     def js_imports(self):
         return self._to_list('js_imports')
 
-    @property
+    @cached_property
     def css_imports(self):
         return self._to_list('css_imports')
 
-    @property
+    @cached_property
     def html(self):
         return self._html()
 
@@ -157,7 +160,7 @@ class Page(object):
             **data
         )
 
-    @property
+    @cached_property
     def template(self):
         if not self._env:
             self._env = Environment(
@@ -165,7 +168,7 @@ class Page(object):
             )
         return self._env.get_template(self._template_name)
 
-    @property
+    @cached_property
     def _template_name(self):
         name = self._data.get('template')
         if not name:
@@ -175,7 +178,7 @@ class Page(object):
                 name = self.category.child_template
         return name
 
-    @property
+    @cached_property
     def prev(self):
         prev_page = None
         for p in self.category.children:
@@ -183,7 +186,7 @@ class Page(object):
                 return prev_page
             prev_page = p
 
-    @property
+    @cached_property
     def next(self):
         found = False
         for p in self.category.children:
@@ -194,10 +197,10 @@ class Page(object):
 
 class ParentPage(Page):
 
-    @property
+    @cached_property
     def html(self):
         return self._html(children=self.category.children)
 
-    @property
+    @cached_property
     def children(self):
         return self.category.children

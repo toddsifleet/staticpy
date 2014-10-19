@@ -50,3 +50,19 @@ def load_settings(site_path):
 
     settings.input_path = site_path
     return settings
+
+
+class cached_property(object):
+    def __init__(self, fget):
+        self.fget = fget
+        self.name = fget.__name__
+
+    def __get__(self, instance, owner):
+        if instance._cache is None:
+            instance._cache = {}
+        if self.name in instance._cache:
+            return instance._cache.get(self.name)
+        value = self.fget(instance)
+
+        instance._cache[self.name] = value
+        return value

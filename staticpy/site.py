@@ -58,7 +58,7 @@ class Site(object):
             os.path.join(self.output_path, category.url_path)
         )
 
-        category.load()
+        category.bust_cache()
         for page in category.pages:
             if page.html:
                 self._write_page([category.url_path, page.slug], page.html)
