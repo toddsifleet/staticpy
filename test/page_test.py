@@ -69,14 +69,14 @@ def test_url_is_correct_for_index_page_with_no_url_path():
     mock_file()
     page = staticpy.page.Page('file_path', '', dummy_category())
 
-    assert page.url == 'file-path'
+    assert page.url == '/file-path'
 
 
 def test_url_is_correct_for_index_page_with_url_path():
     mock_file()
     page = staticpy.page.Page('file_path', 'url_path', dummy_category())
 
-    assert page.url == 'url_path/file-path'
+    assert page.url == '/url_path/file-path'
 
 
 def test_url_is_correct_for_multi_element_url_path():
@@ -87,4 +87,4 @@ def test_url_is_correct_for_multi_element_url_path():
         dummy_category()
     )
 
-    assert page.url == 'url_path_1/url_path_2/file-path'
+    assert page.url == '/url_path_1/url_path_2/file-path'

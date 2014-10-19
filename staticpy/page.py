@@ -114,10 +114,10 @@ class Page(object):
         if self._data.get('url'):
             return self._data['url']
         elif not self.url_path:
-            return '' if self.slug == 'index' else self.slug
+            return '/' if self.slug == 'index' else '/' + self.slug
 
         path_pieces = os.path.split(self.url_path.strip('\\/'))
-        url = '/'.join([x for x in path_pieces if x])
+        url = '/' + '/'.join([x for x in path_pieces if x])
         return url if self.slug == 'index' else '%s/%s' % (url, self.slug)
 
     @property
@@ -151,6 +151,7 @@ class Page(object):
 
         return self.template.render(
             page=self,
+            category=self.category,
             navigation_links=self.site.navigation_links,
             client_js_code=self.site.client_js_code,
             **data
