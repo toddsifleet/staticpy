@@ -35,7 +35,7 @@ def _parse_file(path):
             attribute = data.group('attribute')
             value = data.group('value')
         else:
-            value += "\n" + line.strip()
+            value += line
     output[attribute] = value.strip()
     return output
 
@@ -200,6 +200,7 @@ class Page(object):
 
     def _get(self, key, default=None):
         return self._data.get(key, default)
+
 
 class ParentPage(Page):
 

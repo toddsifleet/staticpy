@@ -59,7 +59,7 @@ def test_single_line_attributes():
 
 
 def test_multi_line_attributes():
-    mock_file(':attr_name: attr_value_1', 'attr_value_2')
+    mock_file(':attr_name: attr_value_1', '\nattr_value_2')
     page = staticpy.page.Page('file_path', 'url_path', dummy_category())
 
     assert page.attr_name == 'attr_value_1\nattr_value_2'
