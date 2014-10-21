@@ -4,7 +4,7 @@ import datetime
 
 from jinja2 import Environment, PackageLoader
 
-from utils import cached_property
+from utils import cached_property, write_to_file
 
 
 def _read_file(path):
@@ -124,8 +124,13 @@ class Page(object):
         return url if self.slug == 'index' else '%s/%s' % (url, self.slug)
 
     @cached_property
-    def last_modified(self):
+    def modified_at(self):
         seconds = os.path.getmtime(self.file_path)
+        return datetime.datetime.fromtimestamp(seconds)
+
+    @cached_property
+    def created_at(self):
+        seconds = os.path.getctime(self.file_path)
         return datetime.datetime.fromtimestamp(seconds)
 
     @cached_property
@@ -201,6 +206,19 @@ class Page(object):
     def _get(self, key, default=None):
         return self._data.get(key, default)
 
+    def write(self, file_path):
+        if self.no_render:
+            return
+
+        file_path = '{path}.html'.format(
+            path=os.path.join(
+                file_path,
+                self.category.url_path,
+                self.slug
+            ),
+        )
+
+        write_to_file(file_path, self.html)
 
 class ParentPage(Page):
 

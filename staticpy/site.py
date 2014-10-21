@@ -3,12 +3,7 @@ import os
 from jinja2 import Environment, PackageLoader
 
 from category import Category
-from utils import copy_attrs
-
-
-def _write_to_file(fp, contents):
-    with open(fp, 'w') as output:
-        output.write(contents)
+from utils import copy_attrs, write_to_file
 
 
 class Site(object):
@@ -36,35 +31,9 @@ class Site(object):
         self.env = Environment(loader=PackageLoader('dynamic', 'templates'))
 
     def save(self):
-        self._write_category(self.base)
+        self.base.write(self.output_path)
         self._render_sitemap()
         return self
-
-    def _init_category(self, category_path):
-        if not os.path.isdir(category_path):
-            os.mkdir(category_path)
-
-        return category_path
-
-    def _write_page(self, file_path, page):
-        file_path = '{path}.html'.format(
-            path=os.path.join(self.output_path, *file_path),
-        )
-
-        _write_to_file(file_path, page)
-
-    def _write_category(self, category):
-        self._init_category(
-            os.path.join(self.output_path, category.url_path)
-        )
-
-        category.bust_cache()
-        for page in category.pages:
-            if page.html:
-                self._write_page([category.url_path, page.slug], page.html)
-
-        for category in category.categories:
-            self._write_category(category)
 
     def _render_sitemap(self):
         template = self.env.get_template('sitemap.html')
@@ -74,7 +43,7 @@ class Site(object):
             base_url=self.base_url
         )
 
-        _write_to_file(file_path, site_map)
+        write_to_file(file_path, site_map)
 
     @property
     def sitemap_links(self):

@@ -2,7 +2,11 @@ import os
 from os.path import isdir, join
 
 from page import Page, ParentPage
-from utils import cached_property
+from utils import (
+    cached_property,
+    ensure_directory_exists,
+    write_to_file,
+)
 
 
 class Category(object):
@@ -65,6 +69,19 @@ class Category(object):
     @cached_property
     def child_template(self):
         return self.index.child_template or 'base.html'
+
+    def write(self, output_path):
+        ensure_directory_exists(
+            os.path.join(output_path, self.url_path)
+        )
+
+        self.bust_cache()
+        for page in self.pages:
+            page.write(output_path)
+
+        for category in self.categories:
+            category.write(output_path)
+
 
     def __getattr__(self, name):
         for category in self.categories:
