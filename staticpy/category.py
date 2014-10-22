@@ -1,5 +1,5 @@
 import os
-from os.path import isdir, join
+from os.path import isdir
 
 from page import Page
 from index_page import IndexPage
@@ -7,6 +7,7 @@ from index_page import IndexPage
 from utils import (
     cached_property,
     ensure_directory_exists,
+    list_directory,
 )
 
 
@@ -23,7 +24,7 @@ class Category(object):
 
     @cached_property
     def children(self):
-        paths = (p for p in self._list_dir()
+        paths = (p for p in list_directory(self.path)
                  if p.endswith('.page') and not p.endswith('index.page'))
 
         pages = [self._new_page(p) for p in paths]
@@ -33,10 +34,8 @@ class Category(object):
 
     @cached_property
     def categories(self):
-        return [Category(self.site, p) for p in self._list_dir() if isdir(p)]
-
-    def _list_dir(self):
-        return [join(self.path, f) for f in os.listdir(self.path)]
+        return [Category(self.site, p) for p in list_directory(self.path)
+                if isdir(p)]
 
     @cached_property
     def url_path(self):
@@ -46,7 +45,7 @@ class Category(object):
 
     @cached_property
     def index(self):
-        path = join(self.path, 'index.page')
+        path = os.path.join(self.path, 'index.page')
         return IndexPage(path, self.url_path, self)
 
     def _new_page(self, path):

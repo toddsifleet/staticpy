@@ -76,3 +76,7 @@ def ensure_directory_exists(path):
 def write_to_file(fp, contents):
     with open(fp, 'w') as output:
         output.write(contents)
+
+
+def list_directory(path):
+    return [os.path.join(path, f) for f in os.listdir(path)]
