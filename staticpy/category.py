@@ -30,7 +30,7 @@ class Category(object):
         pages = [self._new_page(p) for p in paths]
         if not self.site.include_drafts:
             pages = [p for p in pages if p.published]
-        return pages
+        return sorted(pages, key=lambda x: x.order)
 
     @cached_property
     def categories(self):
