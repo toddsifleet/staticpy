@@ -219,13 +219,3 @@ class Page(object):
         )
 
         write_to_file(file_path, self.html)
-
-class ParentPage(Page):
-
-    @cached_property
-    def html(self):
-        return self._html(children=self.category.children)
-
-    @cached_property
-    def children(self):
-        return self.category.children

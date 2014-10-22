@@ -1,11 +1,12 @@
 import os
 from os.path import isdir, join
 
-from page import Page, ParentPage
+from page import Page
+from index_page import IndexPage
+
 from utils import (
     cached_property,
     ensure_directory_exists,
-    write_to_file,
 )
 
 
@@ -17,13 +18,15 @@ class Category(object):
         self.path = path
         self.slug = os.path.split(path)[-1]
 
-    def bust_cache(self):
+    def _bust_cache(self):
         self._cache = None
 
     @cached_property
-    def pages(self):
-        pages = [p for p in self._list_dir() if p.endswith('.page')]
-        pages = [self._new_page(p) for p in pages]
+    def children(self):
+        paths = (p for p in self._list_dir()
+                 if p.endswith('.page') and not p.endswith('index.page'))
+
+        pages = [self._new_page(p) for p in paths]
         if not self.site.include_drafts:
             pages = [p for p in pages if p.published]
         return pages
@@ -43,24 +46,15 @@ class Category(object):
 
     @cached_property
     def index(self):
-        for page in self.pages:
-            if page.slug == 'index':
-                return page
-
-    @cached_property
-    def children(self):
-        pages = [p for p in self.pages if p.slug != 'index']
-        return sorted(pages, key=lambda x: x.order)
+        path = join(self.path, 'index.page')
+        return IndexPage(path, self.url_path, self)
 
     def _new_page(self, path):
-        args = (path, self.url_path, self)
-        if path.endswith('index.page'):
-            return ParentPage(*args)
-        return Page(*args)
+        return Page(path, self.url_path, self)
 
     @cached_property
     def sub_pages(self):
-        pages = self.pages[:]
+        pages = self.children + [self.index]
 
         for category in self.categories:
             pages.extend(category.sub_pages)
@@ -75,13 +69,13 @@ class Category(object):
             os.path.join(output_path, self.url_path)
         )
 
-        self.bust_cache()
-        for page in self.pages:
+        self._bust_cache()
+        self.index.write(output_path)
+        for page in self.children:
             page.write(output_path)
 
         for category in self.categories:
             category.write(output_path)
-
 
     def __getattr__(self, name):
         for category in self.categories:

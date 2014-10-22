@@ -30,7 +30,7 @@ class TestCompilingSite(object):
         assert page.published
 
     def test_sub_page(self):
-        page = self.site.base.categories[0].pages[1]
+        page = self.site.base.categories[0].children[0]
         assert page.title == 'A Sub Page'
         assert page.published
 

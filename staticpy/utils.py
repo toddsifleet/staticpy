@@ -67,6 +67,7 @@ class cached_property(object):
         instance._cache[self.name] = value
         return value
 
+
 def ensure_directory_exists(path):
     if not os.path.isdir(path):
         os.mkdir(path)
