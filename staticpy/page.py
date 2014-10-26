@@ -117,11 +117,15 @@ class Page(object):
         if self._get('url'):
             return self._get('url')
         elif not self.url_path:
-            return '/' if self.slug == 'index' else '/' + self.slug
+            return '/' + self.slug
 
+        url = self._url
+        return '%s/%s' % (url, self.slug)
+
+    @cached_property
+    def _url(self):
         path_pieces = os.path.split(self.url_path.strip('\\/'))
-        url = '/' + '/'.join([x for x in path_pieces if x])
-        return url if self.slug == 'index' else '%s/%s' % (url, self.slug)
+        return '/' + '/'.join([x for x in path_pieces if x])
 
     @cached_property
     def modified_at(self):
@@ -167,7 +171,7 @@ class Page(object):
 
     @cached_property
     def no_render(self):
-        return self._get('url')
+        return bool(self._get('url'))
 
     @cached_property
     def template(self):
@@ -179,13 +183,10 @@ class Page(object):
 
     @cached_property
     def _template_name(self):
-        name = self._get('template')
-        if not name:
-            if self.slug == 'index':
-                name = 'parent_base.html'
-            else:
-                name = self.category.child_template
-        return name
+        return self._get(
+            'template',
+            self.category.child_template,
+        )
 
     @cached_property
     def prev(self):

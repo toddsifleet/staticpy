@@ -33,6 +33,16 @@ class Category(object):
         return sorted(pages, key=lambda x: x.order)
 
     @cached_property
+    def children_chunks(self):
+        n = 5  # temporarily hardcoded
+        for i in xrange(0, self.child_count, n):
+            yield self.children[i:i+n]
+
+    @cached_property
+    def child_count(self):
+        return len(self.children)
+
+    @cached_property
     def categories(self):
         return [Category(self.site, p) for p in list_directory(self.path)
                 if isdir(p)]
@@ -45,8 +55,25 @@ class Category(object):
 
     @cached_property
     def index(self):
+        return self.index_pages[0]
+
+    @cached_property
+    def index_pages(self):
         path = os.path.join(self.path, 'index.page')
-        return IndexPage(path, self.url_path, self)
+        indexes = []
+        for n, pages in enumerate(self.children_chunks):
+            indexes.append(IndexPage(
+                n,
+                pages,
+                path,
+                self.url_path,
+                self
+            ))
+        return indexes
+
+    @cached_property
+    def index_page_count(self):
+        return len(self.index_pages)
 
     def _new_page(self, path):
         return Page(path, self.url_path, self)
@@ -69,7 +96,9 @@ class Category(object):
         )
 
         self._bust_cache()
-        self.index.write(output_path)
+        for page in self.index_pages:
+            page.write(output_path)
+
         for page in self.children:
             page.write(output_path)
 
