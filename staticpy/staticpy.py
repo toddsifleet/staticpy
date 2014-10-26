@@ -62,6 +62,7 @@ def parse_args_and_load_settings(func):
         )
 
         site_path = parser.parse_args().site_path
+        site_path = os.path.abspath(site_path)
         settings = load_settings(site_path)
         init_output_dir(site_path, settings.output_path)
         func(settings)
