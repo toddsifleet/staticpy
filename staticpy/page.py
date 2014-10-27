@@ -122,7 +122,6 @@ class Page(object):
         url = self._url
         return '%s/%s' % (url, self.slug)
 
-
     @cached_property
     def _url(self):
         path_pieces = os.path.split(self.url_path.strip('\\/'))
@@ -173,6 +172,10 @@ class Page(object):
     @cached_property
     def no_render(self):
         return bool(self._get('url'))
+
+    @cached_property
+    def sitemap(self):
+        return not self.no_sitemap and not self.no_render
 
     @cached_property
     def template(self):
