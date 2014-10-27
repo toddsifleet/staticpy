@@ -85,7 +85,7 @@ class Category(object):
 
     @cached_property
     def sub_pages(self):
-        pages = self.children + [self.index]
+        pages = self.children + self.index_pages
 
         for category in self.categories:
             pages.extend(category.sub_pages)

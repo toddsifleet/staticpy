@@ -47,7 +47,7 @@ class Site(object):
 
     @property
     def sitemap_links(self):
-        return []
+        return [p for p in self.base.sub_pages if not p.no_sitemap and not p.no_render]
 
     @property
     def navigation_links(self):

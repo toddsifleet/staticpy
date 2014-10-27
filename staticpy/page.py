@@ -122,6 +122,7 @@ class Page(object):
         url = self._url
         return '%s/%s' % (url, self.slug)
 
+
     @cached_property
     def _url(self):
         path_pieces = os.path.split(self.url_path.strip('\\/'))
