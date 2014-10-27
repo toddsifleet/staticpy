@@ -59,17 +59,22 @@ class Category(object):
 
     @cached_property
     def index_pages(self):
-        path = os.path.join(self.path, 'index.page')
         indexes = []
         for n, pages in enumerate(self.children_chunks):
-            indexes.append(IndexPage(
-                n,
-                pages,
-                path,
-                self.url_path,
-                self
-            ))
+            indexes.append(self._new_index_page(pages, n))
+        if not indexes:
+            indexes = [self._new_index_page([])]
         return indexes
+
+    def _new_index_page(self, pages, page_number=0):
+        path = os.path.join(self.path, 'index.page')
+        return IndexPage(
+            page_number,
+            pages,
+            path,
+            self.url_path,
+            self
+        )
 
     @cached_property
     def index_page_count(self):
