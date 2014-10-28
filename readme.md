@@ -17,7 +17,7 @@ What does a page's data look like
 	:html-title: Html title
 	:heading: Page Heading
 	:title: Nav Title
-	:home_page: Display on the home page?
+	:include_in_navigation: Display in navbar.
 	:template: Non Default Template
 	:order: Order in nav bar
 	:meta-description:

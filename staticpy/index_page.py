@@ -35,3 +35,10 @@ class IndexPage(Page):
         if self.page_number:
             return str(self.page_number)
         return 'index'
+
+    @cached_property
+    def include_in_navigation(self):
+        if not self._get('include_in_navigation'):
+            return False
+        else:
+            return not self.page_number

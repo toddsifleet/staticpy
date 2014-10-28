@@ -51,5 +51,5 @@ class Site(object):
 
     @property
     def navigation_links(self):
-        links = [p for p in self.base.sub_pages if p.home_page]
+        links = [p for p in self.base.sub_pages if p.include_in_navigation]
         return sorted(links, key=lambda x: x.order)

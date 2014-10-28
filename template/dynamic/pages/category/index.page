@@ -1,5 +1,5 @@
 :title: Category 
-:home-page: True
+:include_in_navigation: True
 :published: 1
 
 :content:
