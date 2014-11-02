@@ -134,7 +134,7 @@ class Worker(threading.Thread):
         with open(file_path) as fh:
             new_hash, _ = s3_key.compute_md5(fh)
             if new_hash == old_hash:
-                logger.info("File {file} unchanged", file=file)
+                logger.info("File {key} unchanged", key=key)
             else:
                 s3_key.set_contents_from_file(fh)
                 logger.success('Uploaded: {key}', key=key)
