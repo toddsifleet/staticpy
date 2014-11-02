@@ -2,7 +2,7 @@ import os
 import argparse
 from functools import wraps
 
-from utils import init_output_dir, load_settings
+from utils import init_output_dir, load_settings, logger
 from s3_uploader import BulkUploader
 from site import Site
 from socket_server import SocketServer
@@ -39,10 +39,10 @@ def _upload_to_s3(settings):
 
 def _compile_site(settings, client_js_code='', dev=False):
     site = Site(settings, client_js_code, dev)
-    print 'Compiling Site: %s' % settings.input_path
-    print 'Output: %s' % settings.output_path
+    logger.info('Compiling Site: {path}', path=settings.input_path)
+    logger.info('Output: %s' % settings.output_path)
     site.save()
-    print 'Done Compiling'
+    logger.success('Done Compiling')
     return site
 
 
@@ -88,7 +88,7 @@ def upload(settings):
     if hasattr(settings, 's3_bucket'):
         _upload_to_s3(settings)
     else:
-        print "No S3 credentials specified"
+        logger.error("No S3 credentials specified")
 
 
 if __name__ == '__main__':

@@ -4,6 +4,8 @@ import threading
 import hashlib
 from struct import pack
 
+from utils import logger
+
 client_js_code = '''
     <script type="text/javascript">
         var server;
@@ -157,7 +159,7 @@ class WebSocket(object):
             self.sock.send(frame_message(message))
             return True
         except:
-            print 'error writing'
+            logger.error('error writing to socket')
             return False
 
     def close(self):
@@ -234,12 +236,18 @@ class SocketServer(threading.Thread):
         for i in range(10):
             try:
                 sock.bind((self.host, self.port))
-                print 'Listening at %s:%s' % (self.host, self.port)
+                logger.success('Listening at {host}:{port}',
+                    host=self.host,
+                    port=self.port
+                )
                 return sock
 
             except Exception as e:
-                print 'Error Binding to port %s:\n%s' % (self.port, e)
+                logger.error('Error Binding to port {port}:\n{error}',
+                    port=self.port,
+                    error=e
+                )
                 self.port += 1
-                print 'Trying to bind to port %s' % self.port
+                logger.info('Trying to bind to port {port}', port=self.port)
 
         raise Exception('Unable to bind %s' % self.host)

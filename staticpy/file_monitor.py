@@ -4,6 +4,8 @@ import re
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from utils import logger
+
 IGNORE = (
     r'\.swp$',
     r'sitemap\.xml$',
@@ -52,11 +54,11 @@ class FileUpdated(FileSystemEventHandler):
 
         if not event.src_path.startswith(self.static_dir):
             try:
-                print 'Recompiling Site'
+                logger.info('Recompiling Site')
                 self.site.save()
-                print 'Done Recompiling'
+                logger.success('Done Recompiling')
             except Exception as e:
-                print 'Error Recompiling', e
+                logger.warning('Error Recompiling {error}', error=e)
 
         if self.clients_queue:
             self.notify()
@@ -90,7 +92,8 @@ def monitor_site(site, clients=None, wait=True):
 
     observer.start()
     if wait:
-        raw_input('Running: press enter to quit...')
-        print 'Shutting Down'
+        logger.warning('Running: press enter to quit...')
+        raw_input('')
+        logger.warning('Shutting Down')
         observer.stop()
         observer.join()

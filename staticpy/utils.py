@@ -2,6 +2,10 @@ import os
 import sys
 import shutil
 
+from logger import Logger
+logger = Logger()
+
+
 
 class DummySettings(object):
     base_url = ''
@@ -45,7 +49,7 @@ def load_settings(site_path):
     try:
         import settings
         settings.output_path = os.path.join(site_path, '.output')
-    except:
+    except ImportError:
         settings = DummySettings(site_path)
 
     settings.input_path = site_path

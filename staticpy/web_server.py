@@ -4,6 +4,8 @@ import socket
 import os
 import threading
 
+from utils import logger
+
 
 class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     '''A basic request TestHandler
@@ -65,5 +67,8 @@ class WebServer(threading.Thread):
         '''
         os.chdir(self.site_path)
         self.server = TestServer(('', self.port), TestHandler)
-        print "Serving webpage at: %s:%d" % (self.host, self.port)
+        logger.success("Serving webpage at: {host}:{port}",
+            host=self.host,
+            port=self.port,
+        )
         self.server.serve_forever()

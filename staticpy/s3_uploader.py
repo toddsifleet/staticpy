@@ -6,7 +6,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.bucket import Bucket
 from boto.s3.key import Key
 
-from utils import copy_attrs
+from utils import copy_attrs, logger
 
 
 class BulkUploader:
@@ -86,7 +86,7 @@ class BulkUploader:
         old_keys = set([x.name for x in bucket.list()])
         to_delete = old_keys - current_keys
         for i in to_delete:
-            print 'Deleting `%s` from S3' % i
+            logger.warning('Deleting `{file}` from S3', file=file)
         bucket.delete_keys(to_delete)
 
 
@@ -132,10 +132,10 @@ class Worker(threading.Thread):
         with open(file_path) as fh:
             new_hash, _ = s3_key.compute_md5(fh)
             if new_hash == old_hash:
-                print "File %s unchanged" % key
+                logger.info("File {file} unchanged", file=file)
             else:
-                print "Uploading: %s " % key
                 s3_key.set_contents_from_file(fh)
+                logger.success('Uploaded: {key}', key=key)
 
 
 class IterQueue:
