@@ -4,13 +4,16 @@ import re
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-ignore_patterns = [
+IGNORE = (
     r'\.swp$',
-]
-ignore_patterns = [re.compile(x) for x in ignore_patterns]
+    r'sitemap\.xml$',
+)
+
+IGNORE = (re.compile(x) for x in IGNORE)
 
 
 class FileUpdated(FileSystemEventHandler):
+    _last_update = 0
     '''Define callbacks for watchdog
 
     The callback are:
@@ -27,12 +30,27 @@ class FileUpdated(FileSystemEventHandler):
         self.static_dir = os.path.join(site.input_path, 'static')
         FileSystemEventHandler.__init__(self)
 
-    def dispatch(self, file_path):
-        for i in ignore_patterns:
-            if i.search(file_path.src_path):
-                return
-        file_path = file_path.src_path
-        if not file_path.startswith(self.static_dir):
+    def _check_event(self, event):
+        if event.is_directory:
+            return True
+
+        for i in IGNORE:
+            if i.search(event.src_path):
+                return True
+        try:
+            mod_time = os.path.getctime(event.src_path)
+        except OSError:
+            return False
+
+        if mod_time - self._last_update < .1:
+            self._last_update = mod_time
+            return True
+
+    def dispatch(self, event):
+        if not self._check_event(event):
+            return
+
+        if not event.src_path.startswith(self.static_dir):
             try:
                 print 'Recompiling Site'
                 self.site.save()
