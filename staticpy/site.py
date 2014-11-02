@@ -47,9 +47,13 @@ class Site(object):
 
     @property
     def sitemap_links(self):
-        return [p for p in self.base.sub_pages if p.sitemap]
+        return [p for p in self.pages if p.sitemap]
 
     @property
     def navigation_links(self):
-        links = [p for p in self.base.sub_pages if p.include_in_navigation]
+        links = [p for p in self.pages if p.include_in_navigation]
         return sorted(links, key=lambda x: x.order)
+
+    @property
+    def pages(self):
+        return [p for p in self.base.sub_pages]

@@ -2,10 +2,9 @@ from __future__ import absolute_import
 
 import os
 
-from jinja2 import Environment, PackageLoader
-
-from ..utils import cached_property, write_to_file
+from ..utils import cached_property
 from .reader import Reader
+from .writer import Writer
 
 
 class BasePage(object):
@@ -24,6 +23,7 @@ class BasePage(object):
         self.file_path = file_path
         self.url_path = url_path
         self.reader = Reader(file_path)
+        self.writer = Writer(self)
 
     @cached_property
     def _data(self):
@@ -55,22 +55,6 @@ class BasePage(object):
         return self.url_path or 'home'
 
     @cached_property
-    def html(self):
-        return self._html()
-
-    def _html(self, **data):
-        if self.no_render:
-            return None
-
-        return self.template.render(
-            page=self,
-            category=self.category,
-            navigation_links=self.site.navigation_links,
-            client_js_code=self.site.client_js_code,
-            **data
-        )
-
-    @cached_property
     def no_render(self):
         return bool(self._get('url'))
 
@@ -79,15 +63,7 @@ class BasePage(object):
         return not self.no_sitemap and not self.no_render
 
     @cached_property
-    def template(self):
-        if not self._env:
-            self._env = Environment(
-                loader=PackageLoader('dynamic', 'templates')
-            )
-        return self._env.get_template(self._template_name)
-
-    @cached_property
-    def _template_name(self):
+    def template_name(self):
         return self._get(
             'template',
             self.category.child_template,
@@ -112,16 +88,7 @@ class BasePage(object):
     def write(self, file_path):
         if self.no_render:
             return
-
-        file_path = '{path}.html'.format(
-            path=os.path.join(
-                file_path,
-                self.category.url_path,
-                self.slug
-            ),
-        )
-
-        write_to_file(file_path, self.html)
+        self.writer.write()
 
     def __getattr__(self, name):
         return getattr(self._data, name)

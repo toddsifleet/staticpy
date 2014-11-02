@@ -11,7 +11,7 @@ class IndexPage(BasePage):
         super(IndexPage, self).__init__(*args, **kwargs)
 
     @cached_property
-    def _template_name(self):
+    def template_name(self):
         return self._get('template', 'parent_base.html')
 
     @cached_property
