@@ -1,8 +1,8 @@
 import os
 from os.path import isdir
 
-from page import Page
-from index_page import IndexPage
+from page.base import BasePage
+from page.index import IndexPage
 
 from utils import (
     cached_property,
@@ -81,7 +81,7 @@ class Category(object):
         return len(self.index_pages)
 
     def _new_page(self, path):
-        return Page(path, self.url_path, self)
+        return BasePage(path, self.url_path, self)
 
     @cached_property
     def sub_pages(self):
