@@ -236,16 +236,18 @@ class SocketServer(threading.Thread):
         for i in range(10):
             try:
                 sock.bind((self.host, self.port))
-                logger.success('Listening at {host}:{port}',
+                logger.success(
+                    'Listening at {host}:{port}',
                     host=self.host,
-                    port=self.port
+                    port=self.port,
                 )
                 return sock
 
             except Exception as e:
-                logger.error('Error Binding to port {port}:\n{error}',
+                logger.error(
+                    'Error Binding to port {port}:\n{error}',
                     port=self.port,
-                    error=e
+                    error=e,
                 )
                 self.port += 1
                 logger.info('Trying to bind to port {port}', port=self.port)

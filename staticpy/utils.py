@@ -6,7 +6,6 @@ from logger import Logger
 logger = Logger()
 
 
-
 class DummySettings(object):
     base_url = ''
 

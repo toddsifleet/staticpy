@@ -67,7 +67,8 @@ class WebServer(threading.Thread):
         '''
         os.chdir(self.site_path)
         self.server = TestServer(('', self.port), TestHandler)
-        logger.success("Serving webpage at: {host}:{port}",
+        logger.success(
+            "Serving webpage at: {host}:{port}",
             host=self.host,
             port=self.port,
         )

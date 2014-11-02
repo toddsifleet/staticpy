@@ -16,6 +16,7 @@ def log_method(func):
         return func(instance, value)
     return wrapped
 
+
 def print_with_color(value, color):
     value = "{color} [{time}] {value}\033[0m".format(
         color=color_codes[color],
@@ -23,6 +24,7 @@ def print_with_color(value, color):
         value=value,
     )
     print value
+
 
 class Logger(object):
 
