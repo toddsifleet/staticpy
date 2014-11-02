@@ -1,10 +1,12 @@
+from __future__ import absolute_import
+
 import os
 import re
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from utils import logger
+from .utils import logger
 
 IGNORE = (
     r'\.swp$',
@@ -55,7 +57,7 @@ class FileUpdated(FileSystemEventHandler):
         if not event.src_path.startswith(self.static_dir):
             try:
                 logger.info('Recompiling Site')
-                self.site.save()
+                self.site.recompile()
                 logger.success('Done Recompiling')
             except Exception as e:
                 logger.warning('Error Recompiling {error}', error=e)

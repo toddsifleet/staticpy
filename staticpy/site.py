@@ -1,12 +1,15 @@
+from __future__ import absolute_import
+
 import os
 
-from jinja2 import Environment, PackageLoader
-
-from category import Category
-from utils import copy_attrs, write_to_file
+from .category import Category
+from .page.sitemap import Sitemap
+from .utils import copy_attrs, cached_property
 
 
 class Site(object):
+    _cache = None
+
     def __init__(self, settings, client_js_code='', include_drafts=False):
         '''A staticpy Site Object
 
@@ -23,37 +26,36 @@ class Site(object):
 
         self.client_js_code = client_js_code
         self.include_drafts = include_drafts
-        self.base = Category(
-            self,
-            os.path.join(self.input_path, 'dynamic', 'pages'),
-        )
-
-        self.env = Environment(loader=PackageLoader('dynamic', 'templates'))
 
     def save(self):
-        self.base.write(self.output_path)
-        self._render_sitemap()
+        self.base.write()
+        self.sitemap.write()
         return self
 
-    def _render_sitemap(self):
-        template = self.env.get_template('sitemap.html')
-        file_path = os.path.join(self.output_path, 'static', 'sitemap.xml')
-        site_map = template.render(
-            pages=self.sitemap_links,
-            base_url=self.base_url
-        )
+    def recompile(self):
+        self.base.bust_cache()
+        self.save()
 
-        write_to_file(file_path, site_map)
-
-    @property
+    @cached_property
     def sitemap_links(self):
         return [p for p in self.pages if p.sitemap]
 
-    @property
+    @cached_property
     def navigation_links(self):
         links = [p for p in self.pages if p.include_in_navigation]
         return sorted(links, key=lambda x: x.order)
 
-    @property
+    @cached_property
     def pages(self):
-        return [p for p in self.base.sub_pages]
+        return [p for p in self.base.sub_pages if p]
+
+    @cached_property
+    def base(self):
+        return Category(
+            self,
+            os.path.join(self.input_path, 'dynamic', 'pages'),
+        )
+
+    @cached_property
+    def sitemap(self):
+        return Sitemap(self)

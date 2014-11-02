@@ -1,10 +1,12 @@
+from __future__ import absolute_import
+
 import os
 from os.path import isdir
 
-from page.base import BasePage
-from page.index import IndexPage
+from .page.base import BasePage
+from .page.index import IndexPage
 
-from utils import (
+from .utils import (
     cached_property,
     ensure_directory_exists,
     list_directory,
@@ -19,7 +21,7 @@ class Category(object):
         self.path = path
         self.slug = os.path.split(path)[-1]
 
-    def _bust_cache(self):
+    def bust_cache(self):
         self._cache = None
 
     @cached_property
@@ -95,20 +97,19 @@ class Category(object):
     def child_template(self):
         return self.index.child_template or 'base.html'
 
-    def write(self, output_path):
+    def write(self):
         ensure_directory_exists(
-            os.path.join(output_path, self.url_path)
+            os.path.join(self.site.output_path, self.url_path)
         )
 
-        self._bust_cache()
         for page in self.index_pages:
-            page.write(output_path)
+            page.write()
 
         for page in self.children:
-            page.write(output_path)
+            page.write()
 
         for category in self.categories:
-            category.write(output_path)
+            category.write()
 
     def __getattr__(self, name):
         for category in self.categories:

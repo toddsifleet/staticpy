@@ -1,10 +1,12 @@
+from __future__ import absolute_import
+
 import Queue
 import socket
 import threading
 import hashlib
 from struct import pack
 
-from utils import logger
+from .utils import logger
 
 client_js_code = '''
     <script type="text/javascript">

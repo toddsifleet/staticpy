@@ -1,6 +1,9 @@
+from __future__ import absolute_import
+
+
 class Data(object):
     def __init__(self, **kwargs):
-        self._data = {}
+        self._data = kwargs
 
     def set(self, name, value):
         name = name.strip().replace('-', '_')
@@ -8,10 +11,6 @@ class Data(object):
 
     def get(self, key, default=None):
         return self._data.get(key, default)
-
-    @property
-    def order(self):
-        return int(self.get('order', 100))
 
     def __getattr__(self, name):
         return self._data.get(name, '')

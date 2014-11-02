@@ -1,10 +1,12 @@
+from __future__ import absolute_import
+
 import SimpleHTTPServer
 import SocketServer
 import socket
 import os
 import threading
 
-from utils import logger
+from .utils import logger
 
 
 class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):

@@ -1,91 +1,84 @@
-from doubles import allow, InstanceDouble
+from doubles import allow, InstanceDouble, expect
+from pytest import fixture
 
-import staticpy.page.reader as reader
 from staticpy.page.base import BasePage
+from staticpy.page.data import Data
 
 
-def mock_file(*lines):
-    lines = [x + '\n' for x in lines]
-    allow(reader)._read_file.and_return(lines)
+@fixture
+def page(request):
+    page = BasePage('file_path.page', 'url_path', dummy_category())
+    allow(page)._data.and_return(Data())
+    return page
 
 
 def dummy_category():
-    dummy_site = InstanceDouble('staticpy.site.Site')
+    return InstanceDouble(
+        'staticpy.category.Category',
+        site=InstanceDouble('staticpy.site.Site'),
+    )
 
-    dummy_category = InstanceDouble('staticpy.category.Category')
-    dummy_category.site = dummy_site
-    return dummy_category
 
-
-def test_converts_order_to_an_int():
-    mock_file(':order: 10')
-    page = BasePage('file_path', 'url_path', dummy_category())
+def test_converts_order_to_an_int(page):
+    allow(page)._data.and_return(Data(order='10'))
 
     assert page.order == 10
 
 
-def test_converts_js_imports_to_list():
-    mock_file(':js_imports[list]:', 'import 1', 'import 2')
-    page = BasePage('file_path', 'url_path', dummy_category())
-
-    assert page.js_imports == ['import 1', 'import 2']
-
-
-def test_converts_css_imports_to_list():
-    mock_file(':css_imports[list]:', 'import 1', 'import 2')
-    page = BasePage('file_path', 'url_path', dummy_category())
-
-    assert page.css_imports == ['import 1', 'import 2']
+def test_order_defaults_to_infinity(page):
+    assert page.order == float('inf')
 
 
 def test_path_is_correct_if_there_is_no_url_path():
-    mock_file()
     page = BasePage('file_path', '', dummy_category())
+    allow(page)._data.and_return(Data())
 
     assert page.path == 'home'
 
 
-def test_path_is_correct_if_there_is_a_url_path():
-    mock_file()
-    page = BasePage('file_path', 'url_path', dummy_category())
-
+def test_path_is_correct_if_there_is_a_url_path(page):
     assert page.path == 'url_path'
 
 
-def test_single_line_attributes():
-    mock_file(':attr_name: attr_value')
-    page = BasePage('file_path', 'url_path', dummy_category())
-
-    assert page.attr_name == 'attr_value'
-
-
-def test_multi_line_attributes():
-    mock_file(':attr_name: attr_value_1', '\nattr_value_2')
-    page = BasePage('file_path', 'url_path', dummy_category())
-
-    assert page.attr_name == 'attr_value_1\nattr_value_2'
-
-
 def test_url_is_correct_for_index_page_with_no_url_path():
-    mock_file()
     page = BasePage('file_path', '', dummy_category())
+    allow(page)._data.and_return(Data())
 
     assert page.url == '/file-path'
 
 
-def test_url_is_correct_for_index_page_with_url_path():
-    mock_file()
-    page = BasePage('file_path', 'url_path', dummy_category())
-
+def test_url_is_correct_for_index_page_with_url_path(page):
     assert page.url == '/url_path/file-path'
 
 
 def test_url_is_correct_for_multi_element_url_path():
-    mock_file()
     page = BasePage(
         'file_path',
         'url_path_1/url_path_2',
         dummy_category()
     )
+    allow(page)._data.and_return(Data())
 
     assert page.url == '/url_path_1/url_path_2/file-path'
+
+
+def test_reads_file_once_and_only_once():
+    import staticpy.page.base
+    page = BasePage('file_path', '', dummy_category())
+
+    allow(staticpy.page.base).read_file.and_return(
+        Data(foo='bar'),
+    ).once()
+    assert page.foo == 'bar'
+    assert page.foo == 'bar'
+
+
+def test_write_calls_write_page(page):
+    import staticpy.page.base
+
+    expect(staticpy.page.base).write_page.with_args(page).once()
+    page.write()
+
+
+def test_slug_replaces_underscores(page):
+    assert page.slug == 'file-path'

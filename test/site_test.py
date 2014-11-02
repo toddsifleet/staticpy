@@ -1,10 +1,13 @@
 import os
 
+from pytest import fixture
+from doubles import expect, allow
+
 import staticpy.site
 from staticpy.utils import load_settings
 
 
-def settings():
+def get_settings():
     path = os.path.realpath(__file__)
     parts = path.split(os.sep)[:-2]
     parts.append('template')
@@ -13,39 +16,35 @@ def settings():
     return load_settings('/' + path)
 
 
-class TestCompilingSite(object):
-    def setup_method(self, method):
-        self.settings = settings()
-        self.site = staticpy.site.Site(self.settings)
-
-    def test_site_index(self):
-        page = self.site.base.index
-        assert page.title == 'home'
-        assert page.published
-
-    def test_sub_page_index(self):
-        category = self.site.base.categories[0]
-        page = category.index
-        assert page.title == 'Category'
-        assert page.published
-
-    def test_sub_page(self):
-        page = self.site.base.categories[0].children[0]
-        assert page.title == 'A Sub Page'
-        assert page.published
+@fixture
+def site(request):
+    site = staticpy.site.Site(get_settings())
+    allow(site.sitemap).write
+    return site
 
 
-class TestRenderingSite(object):
-    """Haven't decied how to tes this"""
-    def setup_method(self, method):
-        self.settings = settings()
-        self.site = staticpy.site.Site(self.settings)
+class TestInit(object):
+    def test_attrs_are_copied_from_settings(self, site):
+        settings = get_settings()
+        assert site.input_path == settings.input_path
+        assert site.output_path == settings.output_path
+        assert site.base_url == settings.base_url
 
-    def test_site_index(self):
-        pass
+    def test_client_js_code(self, site):
+        assert site.client_js_code == ''
 
-    def test_sub_page_index(self):
-        pass
+    def test_incldue_drafts(self, site):
+        assert not site.include_drafts
 
-    def test_sub_page(self):
-        pass
+
+class TestSave(object):
+    def test_calls_write_on_each_page(self, site):
+        for page in site.pages:
+            expect(page).write
+        site.save()
+
+    def test_renders_sitemap(self, site):
+        for page in site.pages:
+            allow(page).write
+        expect(site.sitemap).write
+        site.save()

@@ -7,9 +7,15 @@ from .reader import Reader
 from .writer import Writer
 
 
+def read_file(file_path):
+    return Reader(file_path).read()
+
+
+def write_page(page):
+    return Writer(page).write()
+
+
 class BasePage(object):
-    _data = None
-    _env = None
     _cache = None
 
     def __init__(
@@ -22,12 +28,10 @@ class BasePage(object):
         self.category = category
         self.file_path = file_path
         self.url_path = url_path
-        self.reader = Reader(file_path)
-        self.writer = Writer(self)
 
     @cached_property
     def _data(self):
-        return self.reader.read()
+        return read_file(self.file_path)
 
     @cached_property
     def slug(self):
@@ -85,10 +89,16 @@ class BasePage(object):
                 return p
             found = p == self
 
-    def write(self, file_path):
-        if self.no_render:
-            return
-        self.writer.write()
+    @property
+    def order(self):
+        order = self._get('order')
+        if order:
+            return int(order)
+        return float('inf')
+
+    def write(self):
+        if not self.no_render:
+            write_page(self)
 
     def __getattr__(self, name):
         return getattr(self._data, name)

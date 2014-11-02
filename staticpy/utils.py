@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+
 import os
 import sys
 import shutil
 
-from logger import Logger
+from .logger import Logger
+
 logger = Logger()
 
 

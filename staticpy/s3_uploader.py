@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import os
 import Queue
 import threading
@@ -6,7 +8,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.bucket import Bucket
 from boto.s3.key import Key
 
-from utils import copy_attrs, logger
+from .utils import copy_attrs, logger
 
 
 class BulkUploader:

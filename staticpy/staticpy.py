@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+
 import os
 import argparse
 from functools import wraps
 
-from utils import init_output_dir, load_settings, logger
-from s3_uploader import BulkUploader
-from site import Site
-from socket_server import SocketServer
-from web_server import WebServer
-from file_monitor import monitor_site
+from .utils import init_output_dir, load_settings, logger
+from .s3_uploader import BulkUploader
+from .site import Site
+from .socket_server import SocketServer
+from .web_server import WebServer
+from .file_monitor import monitor_site
 
 
 def _upload_to_s3(settings):
