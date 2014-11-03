@@ -30,10 +30,6 @@ class BasePage(object):
         self.url_path = url_path
 
     @cached_property
-    def _data(self):
-        return read_file(self.file_path)
-
-    @cached_property
     def slug(self):
         file_name = os.path.split(self.file_path)[-1].split('.')[0]
         slug = file_name.split('.')[0]
@@ -48,11 +44,6 @@ class BasePage(object):
 
         url = self._url
         return '%s/%s' % (url, self.slug)
-
-    @cached_property
-    def _url(self):
-        path_pieces = os.path.split(self.url_path.strip('\\/'))
-        return '/' + '/'.join([x for x in path_pieces if x])
 
     @cached_property
     def path(self):
@@ -105,3 +96,12 @@ class BasePage(object):
 
     def _get(self, *args):
         return self._data.get(*args)
+
+    @cached_property
+    def _data(self):
+        return read_file(self.file_path)
+
+    @cached_property
+    def _url(self):
+        path_pieces = os.path.split(self.url_path.strip('\\/'))
+        return '/' + '/'.join([x for x in path_pieces if x])

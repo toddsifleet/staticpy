@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+from os.path import isdir, isfile
 import sys
 import shutil
 
@@ -88,3 +89,13 @@ def write_to_file(fp, contents):
 
 def list_directory(path):
     return [os.path.join(path, f) for f in os.listdir(path)]
+
+
+def list_directories(path):
+    paths = list_directory(path)
+    return [p for p in paths if isdir(p)]
+
+
+def list_files(path):
+    paths = list_directory(path)
+    return [p for p in paths if isfile(p)]
