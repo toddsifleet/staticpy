@@ -1,13 +1,13 @@
 from doubles import allow, InstanceDouble, expect
 from pytest import fixture
 
-from staticpy.page.base import BasePage
+from staticpy.page import Page
 from staticpy.page.data import Data
 
 
 @fixture
 def page(request):
-    page = BasePage('file_path.page', 'url_path', dummy_category())
+    page = Page('file_path.page', 'url_path', dummy_category())
     allow(page)._data.and_return(Data())
     return page
 
@@ -30,7 +30,7 @@ def test_order_defaults_to_infinity(page):
 
 
 def test_path_is_correct_if_there_is_no_url_path():
-    page = BasePage('file_path', '', dummy_category())
+    page = Page('file_path', '', dummy_category())
     allow(page)._data.and_return(Data())
 
     assert page.path == 'home'
@@ -41,7 +41,7 @@ def test_path_is_correct_if_there_is_a_url_path(page):
 
 
 def test_url_is_correct_for_index_page_with_no_url_path():
-    page = BasePage('file_path', '', dummy_category())
+    page = Page('file_path', '', dummy_category())
     allow(page)._data.and_return(Data())
 
     assert page.url == '/file-path'
@@ -52,7 +52,7 @@ def test_url_is_correct_for_index_page_with_url_path(page):
 
 
 def test_url_is_correct_for_multi_element_url_path():
-    page = BasePage(
+    page = Page(
         'file_path',
         'url_path_1/url_path_2',
         dummy_category()
@@ -63,10 +63,10 @@ def test_url_is_correct_for_multi_element_url_path():
 
 
 def test_reads_file_once_and_only_once():
-    import staticpy.page.base
-    page = BasePage('file_path', '', dummy_category())
+    import staticpy.page.page
+    page = Page('file_path', '', dummy_category())
 
-    allow(staticpy.page.base).read_file.and_return(
+    allow(staticpy.page.page).read_file.and_return(
         Data(foo='bar'),
     ).once()
     assert page.foo == 'bar'
@@ -74,9 +74,9 @@ def test_reads_file_once_and_only_once():
 
 
 def test_write_calls_write_page(page):
-    import staticpy.page.base
+    import staticpy.page.page
 
-    expect(staticpy.page.base).write_page.with_args(page).once()
+    expect(staticpy.page.page).write_page.with_args(page).once()
     page.write()
 
 

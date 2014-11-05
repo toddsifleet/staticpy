@@ -2,9 +2,9 @@ from __future__ import absolute_import
 
 import os
 
-from .category import Category
-from .page.sitemap import Sitemap
-from .utils import copy_attrs, cached_property
+from ..utils import copy_attrs, cached_property, ensure_directory_exists
+from ..category import Category
+from .sitemap import Sitemap
 
 
 class Site(object):
@@ -28,13 +28,23 @@ class Site(object):
         self.include_drafts = include_drafts
 
     def save(self):
-        self.base.write()
+        for category in self.categories:
+            ensure_directory_exists(
+                os.path.join(self.output_path, category.url_path)
+            )
+
+        for page in self.pages:
+            page.write()
+
         self.sitemap.write()
-        return self
 
     def recompile(self):
-        self.base.bust_cache()
+        self.bust_cache()
         self.save()
+
+    def bust_cache(self):
+        self._cache = None
+        self.base.bust_cache()
 
     @cached_property
     def sitemap_links(self):
@@ -47,7 +57,11 @@ class Site(object):
 
     @cached_property
     def pages(self):
-        return [p for p in self.base.sub_pages if p]
+        return self.base.sub_pages
+
+    @cached_property
+    def categories(self):
+        return self.base.sub_categories
 
     @cached_property
     def base(self):

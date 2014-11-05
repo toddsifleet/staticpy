@@ -76,6 +76,11 @@ class cached_property(property):
         instance._cache[self.name] = value
         return value
 
+    def __set__(self, instance, value):
+        if instance._cache is None:
+            instance._cache = {}
+        instance._cache[self.name] = value
+
 
 def ensure_directory_exists(path):
     if not os.path.isdir(path):

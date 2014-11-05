@@ -7,7 +7,7 @@ from staticpy.category import Category
 def dummy_page(order=0, published=True, **kwargs):
 
     return InstanceDouble(
-        'staticpy.page.base.BasePage',
+        'staticpy.page.Page',
         order=order,
         published=published,
         **kwargs
@@ -121,3 +121,25 @@ class TestIndexPages(object):
         index = category.index_pages[1]
 
         assert index.pages == pages[category._page_size:]
+
+
+class TestSubCategories(object):
+    def test_empty_list(self, category):
+        allow(category).categories.and_return([])
+        assert category.sub_categories == []
+
+    def test_one_level_deep(self, category):
+        category_2 = Category(category.site, 'pages/category/category_2')
+        category.categories = [category_2]
+        category_2.categories = []
+
+        assert category.sub_categories == [category_2]
+
+    def test_multiple_levels_deep(self, category):
+        category_2 = Category(category.site, 'pages/category/category_2')
+        category_3 = Category(category.site, 'pages/category/category_3')
+        category.categories = [category_2]
+        category_2.categories = [category_3]
+        category_3.categories = []
+
+        assert category.sub_categories == [category_2, category_3]

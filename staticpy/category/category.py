@@ -2,12 +2,11 @@ from __future__ import absolute_import
 
 import os
 
-from .page.base import BasePage
-from .page.index import IndexPage
+from ..page import Page
+from .index_page import IndexPage
 
-from .utils import (
+from ..utils import (
     cached_property,
-    ensure_directory_exists,
     list_directories,
     list_files,
 )
@@ -27,20 +26,6 @@ class Category(object):
         for category in self.categories:
             category.bust_cache()
 
-    def write(self):
-        ensure_directory_exists(
-            os.path.join(self.site.output_path, self.url_path)
-        )
-
-        for page in self.index_pages:
-            page.write()
-
-        for page in self.children:
-            page.write()
-
-        for category in self.categories:
-            category.write()
-
     @cached_property
     def index_page_count(self):
         return len(self.index_pages)
@@ -52,6 +37,13 @@ class Category(object):
         for category in self.categories:
             pages.extend(category.sub_pages)
         return pages
+
+    @cached_property
+    def sub_categories(self):
+        categories = self.categories[:]
+        for category in categories:
+            categories.extend(category.sub_categories)
+        return categories
 
     @cached_property
     def child_template(self):
@@ -114,7 +106,7 @@ class Category(object):
         )
 
     def _new_page(self, path):
-        return BasePage(path, self.url_path, self)
+        return Page(path, self.url_path, self)
 
     def __getattr__(self, name):
         for category in self.categories:

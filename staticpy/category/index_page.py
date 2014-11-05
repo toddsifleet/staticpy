@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-from .base import BasePage
+from ..page import Page
 from ..utils import cached_property
 
 
-class IndexPage(BasePage):
+class IndexPage(Page):
     def __init__(self, page_number, pages, *args, **kwargs):
         self.pages = pages
         self.page_number = page_number

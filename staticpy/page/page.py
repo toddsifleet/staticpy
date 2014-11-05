@@ -15,7 +15,7 @@ def write_page(page):
     return Writer(page).write()
 
 
-class BasePage(object):
+class Page(object):
     _cache = None
 
     def __init__(
