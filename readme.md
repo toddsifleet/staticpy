@@ -3,31 +3,41 @@ A python static site generator
 
 I wanted a simple way to generate a personal static website, this is what I got.  Some of the features:
 
--It uses the powerful [Jinja](http://jinja.pocoo.org/) templating engine
+-It uses the [Jinja](http://jinja.pocoo.org/) templating engine
 
 -It has a built in development server, that reloads on file changes.
 
--The pages automatically refresh on saves so you see the effects of your changes without switching windows.  We insert a little snippet of javascript that is connect via websocket to know when a file has changed.  This makes iteration incredibly fast.
-
 -It has built in support to upload to s3.
 
-
-What does a page's data look like
+Site Structure:
 -------
-	:html-title: Html title
-	:heading: Page Heading
-	:title: Nav Title
-	:include_in_navigation: Display in navbar.
-	:template: Non Default Template
-	:order: Order in nav bar
-	:meta-description:
-	:meta-keywords:
-	:styles:
-		Style specific to this page
-	:scripts:
-		Scripts specific to this page
-	:content:
-		The main content
+
+	/dynamic
+		/templates
+			base.html
+			parent_base.html
+		/pages
+			index.page
+			/category
+				/index.page
+				/sub_page_1.page
+			/page_1.page
+	/static
+	
+Define Page Data:
+-------
+Pages can have any attribute defined on them, only: template, order, published, and url are treated different.  All attributes defined in the .page file are passed into the appropriate template. 
+
+	:order: Order in navigation links.
+	:published: Only deploy pages with this flag.
+	:url: This page is not rendered, it is just a link to a page on another site. 
+	:attr-name[list]: Attributes with [list] will be interpreted as a list, one item per .
+	:template: Overrided the default template. 
+
+Define Templates:
+-------
+
+Templates live in the dynamic/templates directory. By default the template is base.html for standard pages, and parent_base.html for parent pages.  This can be overwritten by defining :template in the .page file. 
 
 Then what?
 -------
@@ -49,8 +59,14 @@ Using the dev server these pages are visible at:
 	localhost:8080/about
 	localhost:8080/blog/static_site
 
-More to come...
-======
+Usage:
+-------
+	
+	# development mode
+	>> staticpy-dev /path/to/site
+	
+	# upload your site
+	>> staticpy-upload /path/to/site
 
 License:
 -------
