@@ -2,9 +2,10 @@ from __future__ import absolute_import
 
 import os
 
-from ..utils import copy_attrs, cached_property, ensure_directory_exists
+from ..utils import copy_attrs, cached_property
 from ..category import Category
 from .sitemap import Sitemap
+from .writer import Writer
 
 
 class Site(object):
@@ -26,17 +27,10 @@ class Site(object):
 
         self.client_js_code = client_js_code
         self.include_drafts = include_drafts
+        self.writer = Writer(self, self.output_path)
 
     def save(self):
-        for category in self.categories:
-            ensure_directory_exists(
-                os.path.join(self.output_path, category.url_path)
-            )
-
-        for page in self.pages:
-            page.write()
-
-        self.sitemap.write()
+        self.writer.write()
 
     def recompile(self):
         self.bust_cache()

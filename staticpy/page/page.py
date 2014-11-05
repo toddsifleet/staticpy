@@ -7,14 +7,6 @@ from .reader import Reader
 from .writer import Writer
 
 
-def read_file(file_path):
-    return Reader(file_path).read()
-
-
-def write_page(page):
-    return Writer(page).write()
-
-
 class Page(object):
     _cache = None
 
@@ -28,6 +20,8 @@ class Page(object):
         self.category = category
         self.file_path = file_path
         self.url_path = url_path
+        self.writer = Writer(self)
+        self.reader = Reader(file_path)
 
     @cached_property
     def slug(self):
@@ -89,7 +83,7 @@ class Page(object):
 
     def write(self):
         if not self.no_render:
-            write_page(self)
+            self.writer.write()
 
     def __getattr__(self, name):
         return getattr(self._data, name)
@@ -99,7 +93,7 @@ class Page(object):
 
     @cached_property
     def _data(self):
-        return read_file(self.file_path)
+        return self.reader.read()
 
     @cached_property
     def _url(self):

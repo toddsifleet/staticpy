@@ -63,10 +63,9 @@ def test_url_is_correct_for_multi_element_url_path():
 
 
 def test_reads_file_once_and_only_once():
-    import staticpy.page.page
     page = Page('file_path', '', dummy_category())
 
-    allow(staticpy.page.page).read_file.and_return(
+    allow(page.reader).read.and_return(
         Data(foo='bar'),
     ).once()
     assert page.foo == 'bar'
@@ -74,9 +73,7 @@ def test_reads_file_once_and_only_once():
 
 
 def test_write_calls_write_page(page):
-    import staticpy.page.page
-
-    expect(staticpy.page.page).write_page.with_args(page).once()
+    expect(page.writer).write.once()
     page.write()
 
 
