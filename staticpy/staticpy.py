@@ -5,38 +5,11 @@ import argparse
 from functools import wraps
 
 from .utils import init_output_dir, load_settings, logger
-from .s3_uploader import BulkUploader
+from .s3_uploader import upload_to_s3
 from .site import Site
 from .socket_server import SocketServer
 from .web_server import WebServer
 from .file_monitor import monitor_site
-
-
-def _upload_to_s3(settings):
-    '''Upload the site to s3
-
-        Given a settings object with s3 credentials and a bucket name we upload
-        the compiled results to s3.
-
-        We transform the individual file paths to remove .html unless they are
-        index.html files.  This allows us to have pretty urls like
-        /path/to/page.
-
-        params:
-            settings
-    '''
-    def transform(path):
-        if path.endswith('index.html'):
-            return path
-        elif path.endswith('.html'):
-            return path[0:-5]
-        return path
-
-    def file_filter(path):
-        file_name = os.path.basename(path)
-        return not file_name.startswith('.')
-
-    BulkUploader(settings, file_filter, transform).start()
 
 
 def _compile_site(settings, client_js_code='', dev=False):
@@ -88,7 +61,11 @@ def develop(settings):
 def upload(settings):
     _compile_site(settings)
     if hasattr(settings, 's3_bucket'):
-        _upload_to_s3(settings)
+        upload_to_s3(
+            settings.aws_keys,
+            settings.s3_bucket,
+            settings.output_path,
+        )
     else:
         logger.error("No S3 credentials specified")
 
