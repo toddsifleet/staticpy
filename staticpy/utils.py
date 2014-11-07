@@ -104,3 +104,9 @@ def list_directories(path):
 def list_files(path):
     paths = list_directory(path)
     return [p for p in paths if isfile(p)]
+
+
+def walk_directory(source_path):
+    for (path, _, files) in os.walk(source_path, followlinks=True):
+        for file_name in files:
+            yield os.path.join(path, file_name)

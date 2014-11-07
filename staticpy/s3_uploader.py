@@ -7,7 +7,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.bucket import Bucket
 from boto.s3.key import Key
 
-from .utils import logger
+from .utils import logger, walk_directory
 
 
 def transform(path):
@@ -24,7 +24,8 @@ def get_key(base, path):
     return path.replace('\\', '/')
 
 
-def file_filter(file_name):
+def file_filter(path):
+    file_name = os.path.basename(path)
     return not file_name.startswith('.')
 
 
@@ -45,13 +46,11 @@ def upload_to_s3(aws_keys, bucket, source_path):
     '''
     current_keys = set()
     pool = Pool(processes=10)
-    for (path, _, files) in os.walk(source_path, followlinks=True):
-        for file_name in files:
-            if file_filter(file_name):
-                file_path = os.path.join(path, file_name)
-                key = get_key(source_path, file_path)
-                current_keys.add(key)
-                pool.apply_async(upload, [aws_keys, bucket, key, file_path])
+    files = [p for p in walk_directory(source_path) if file_filter(p)]
+    for path in files:
+        key = get_key(source_path, path)
+        current_keys.add(key)
+        pool.apply_async(upload, [aws_keys, bucket, key, path])
     pool.apply_async(delete_removed_keys, [aws_keys, bucket, current_keys])
     pool.close()
     pool.join()
