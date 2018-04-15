@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import os
 from multiprocessing import Pool
 
-from boto.s3.connection import S3Connection
+from boto.s3.connection import S3Connection, OrdinaryCallingFormat
 from boto.s3.bucket import Bucket
 from boto.s3.key import Key
 
@@ -57,7 +57,7 @@ def upload_to_s3(aws_keys, bucket, source_path):
 
 
 def delete_removed_keys(aws_keys, bucket, current_keys):
-    conn = S3Connection(*aws_keys)
+    conn = S3Connection(*aws_keys, calling_format=OrdinaryCallingFormat())
     bucket = conn.get_bucket(bucket)
     old_keys = set([x.name for x in bucket.list()])
     to_delete = old_keys - current_keys
@@ -69,7 +69,7 @@ def delete_removed_keys(aws_keys, bucket, current_keys):
 
 def upload(credentials, bucket, key, file_path):
     bucket = Bucket(
-        connection=S3Connection(*credentials),
+        connection=S3Connection(*credentials, calling_format=OrdinaryCallingFormat()),
         name=bucket
     )
 
